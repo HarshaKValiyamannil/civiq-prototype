@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CiviQ - Report an Issue</title>
+    <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        textarea, input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            margin-top: 15px;
+        }
+        #statusMessage {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Report an Issue</h2>
+        
+        <label>Issue Type:</label>
+        <select id="issueType" class="form-control">
+            <option value="Pothole">Pothole</option>
+            <option value="Streetlight">Broken Streetlight</option>
+            <option value="Flytipping">Illegal Dumping</option>
+            <option value="Other">Other</option>
+        </select>
+        <br>
+
+        <label>Description:</label>
+        <textarea id="description" class="form-control" placeholder="Describe the issue..."></textarea>
+        <br>
+
+        <label>Location (Lat, Long):</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="latitude" placeholder="Latitude (e.g. 54.59)" class="form-control">
+            <input type="text" id="longitude" placeholder="Longitude (e.g. -5.93)" class="form-control">
+        </div>
+        <button type="button" onclick="getLocation()" class="btn btn-secondary btn-sm" style="margin-top:5px;">📍 Get My Location</button>
+        <br><br>
+
+        <label>Photo Evidence:</label>
+        <input type="file" id="imageFile" class="form-control">
+        <br>
+
+        <button id="submitBtn" class="btn btn-primary">Submit Report</button>
+        
+        <div id="statusMessage"></div>
+    </div>
+
+    <script src="JS/jquery-3.6.0.min.js"></script>
+    <script src="JS/app.js"></script>
+</body>
+</html>

@@ -1,4 +1,12 @@
 let map; // Global variable for the map
+let allReports = []; // Store all reports for filtering
+
+// Add this helper function at the top of your script
+function getMarkerColor(sentiment) {
+    if (sentiment === 'negative') return 'red'; // Urgent
+    if (sentiment === 'positive') return 'green'; // Commendation
+    return 'blue'; // Standard/Neutral
+}
 
 // ==========================================
 // CONFIGURATION: YOUR LOGIC APP URLS
@@ -24,6 +32,9 @@ $(document).ready(function () {
 // 2. SUBMIT REPORT LOGIC
 // ==========================================
 function submitNewAsset() {
+    // Add this line at the very top of the function
+    window.appInsights?.trackEvent({name: 'UserSubmittedReport', properties: {type: document.getElementById('issueType').value}});
+    
     console.log("Submit button clicked!"); 
 
     const issueType = document.getElementById('issueType').value;
@@ -97,89 +108,127 @@ function loadReports() {
             return;
         }
 
-        // Draw the map with the data we just found
-        initMap(items);
+        // Store all reports for filtering
+        allReports = items;
 
-        items.forEach(report => {
-            const card = document.createElement('div');
-            card.className = "card mb-3 shadow-sm";
-            card.style = "border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;";
-            
-            // --- SMART TAG CLEANER ---
-            let aiDisplay = "";
-            if (report.aiCaption) {
-                let tagsString = "No tags";
-                
-                try {
-                    // Case 1: It's already a clean list (Array)
-                    if (Array.isArray(report.aiTags)) {
-                        // Check if it's a list of objects [{name:"cat"}] or text ["cat"]
-                        if (typeof report.aiTags[0] === 'object') {
-                            tagsString = report.aiTags.map(t => t.name).join(", ");
-                        } else {
-                            tagsString = report.aiTags.join(", ");
-                        }
-                    } 
-                    // Case 2: It is a String (Text)
-                    else if (typeof report.aiTags === 'string') {
-                        // Check if it looks like JSON code (starts with [)
-                        if (report.aiTags.trim().startsWith("[")) {
-                            const parsed = JSON.parse(report.aiTags);
-                            tagsString = parsed.map(t => t.name).join(", ");
-                        } else {
-                            tagsString = report.aiTags; // It's just normal text
-                        }
-                    }
-                } catch (e) {
-                    console.error("Error parsing tags:", e);
-                    tagsString = "Tags available but could not format.";
-                }
-
-                aiDisplay = `
-                    <div style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #17a2b8; border-radius: 4px;">
-                        <small style="color: #17a2b8; font-weight: bold;">🤖 Azure AI Analysis:</small><br>
-                        <i style="color: #555;">"${report.aiCaption}"</i><br>
-                        <small class="text-muted">Tags: ${tagsString}</small>
-                    </div>
-                `;
-            }
-            // --------------------------------
-
-            // Calculate current votes (default to 0 if missing)
-            const votes = report.votes || 0;
-
-            // Create the button HTML
-            const voteButton = `
-                <button class="btn btn-sm btn-outline-primary" 
-                        onclick="upvoteReport('${report.id}', '${report.issueType}', this)" 
-                        style="margin-top: 10px;">
-                    👍 <span class="vote-count">${votes}</span>
-                </button>
-            `;
-
-            card.innerHTML = `
-                <div style="display:flex; gap: 15px; align-items: start;">
-                    <div style="width: 100px; height: 100px; flex-shrink:0;">
-                        <img src="${report.imageUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px; border: 1px solid #eee;" 
-                             onerror="this.src='https://via.placeholder.com/100?text=No+Img'"> 
-                    </div>
-                    <div style="flex-grow: 1;">
-                        <h5 style="margin: 0 0 5px 0; color: #007bff;">${report.issueType || 'Issue'}</h5>
-                        <p style="margin: 0 0 5px 0;">${report.description || 'No description'}</p>
-                        <small class="text-muted">📍 ${report.location?.lat || '?'}, ${report.location?.lon || '?'}</small>
-                        <br>
-                        <span class="badge bg-secondary" style="font-size: 0.8em; margin-top: 5px; display:inline-block;">${report.status || 'New'}</span>
-                        ${aiDisplay}
-                        ${voteButton}
-                    </div>
-                </div>
-            `;
-            listDiv.appendChild(card);
-        });
+        // Apply filters and display
+        filterReports();
     })
     .catch(error => {
         console.error('❌ Load Error:', error);
         listDiv.innerText = "Failed to load reports.";
+    });
+}
+
+// ==========================================
+// 7. FILTER LOGIC
+// ==========================================
+function filterReports() {
+    const typeFilter = document.getElementById('typeFilter').value;
+    const sentimentFilter = document.getElementById('sentimentFilter').value;
+    
+    let filteredReports = allReports;
+    
+    // Apply type filter
+    if (typeFilter !== 'All') {
+        filteredReports = filteredReports.filter(report => report.issueType === typeFilter);
+    }
+    
+    // Apply sentiment filter
+    if (sentimentFilter !== 'All') {
+        filteredReports = filteredReports.filter(report => report.sentiment === sentimentFilter);
+    }
+    
+    // Clear and redraw map
+    if (map) {
+        map.remove();
+    }
+    initMap(filteredReports);
+    
+    // Clear and redraw list
+    const listDiv = document.getElementById('reportsList');
+    listDiv.innerHTML = "";
+    
+    if (filteredReports.length === 0) {
+        listDiv.innerHTML = "<p>No reports match the selected filters.</p>";
+        return;
+    }
+    
+    filteredReports.forEach(report => {
+        const card = document.createElement('div');
+        card.className = "card mb-3 shadow-sm";
+        card.style = "border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;";
+        
+        // --- SMART TAG CLEANER ---
+        let aiDisplay = "";
+        if (report.aiCaption) {
+            let tagsString = "No tags";
+            
+            try {
+                // Case 1: It's already a clean list (Array)
+                if (Array.isArray(report.aiTags)) {
+                    // Check if it's a list of objects [{name:"cat"}] or text ["cat"]
+                    if (typeof report.aiTags[0] === 'object') {
+                        tagsString = report.aiTags.map(t => t.name).join(", ");
+                    } else {
+                        tagsString = report.aiTags.join(", ");
+                    }
+                } 
+                // Case 2: It is a String (Text)
+                else if (typeof report.aiTags === 'string') {
+                    // Check if it looks like JSON code (starts with [)
+                    if (report.aiTags.trim().startsWith("[")) {
+                        const parsed = JSON.parse(report.aiTags);
+                        tagsString = parsed.map(t => t.name).join(", ");
+                    } else {
+                        tagsString = report.aiTags; // It's just normal text
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing tags:", e);
+                tagsString = "Tags available but could not format.";
+            }
+
+            aiDisplay = `
+                <div style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <small style="color: #17a2b8; font-weight: bold;">🤖 Azure AI Analysis:</small><br>
+                    <i style="color: #555;">"${report.aiCaption}"</i><br>
+                    <small class="text-muted">Tags: ${tagsString}</small>
+                </div>
+            `;
+        }
+        // --------------------------------
+
+        // Calculate current votes (default to 0 if missing)
+        const votes = report.votes || 0;
+
+        // Create the button HTML
+        const voteButton = `
+            <button class="btn btn-sm btn-outline-primary" 
+                    onclick="upvoteReport('${report.id}', '${report.issueType}', this)" 
+                    style="margin-top: 10px;">
+                👍 <span class="vote-count">${votes}</span>
+            </button>
+        `;
+
+        card.innerHTML = `
+            <div style="display:flex; gap: 15px; align-items: start;">
+                <div style="width: 100px; height: 100px; flex-shrink:0;">
+                    <img src="${report.imageUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px; border: 1px solid #eee;" 
+                         onerror="this.src='https://via.placeholder.com/100?text=No+Img'"> 
+                </div>
+                <div style="flex-grow: 1;">
+                    <h5 style="margin: 0 0 5px 0; color: #007bff;">${report.issueType || 'Issue'}</h5>
+                    <p style="margin: 0 0 5px 0;">${report.description || 'No description'}</p>
+                    <small class="text-muted">📍 ${report.location?.lat || '?'}, ${report.location?.lon || '?'}</small>
+                    <br>
+                    <span class="badge bg-secondary" style="font-size: 0.8em; margin-top: 5px; display:inline-block;">${report.status || 'New'}</span>
+                    ${aiDisplay}
+                    ${voteButton}
+                </div>
+            </div>
+        `;
+        listDiv.appendChild(card);
     });
 }
 
@@ -247,28 +296,29 @@ function initMap(reports) {
 
         if (report.location && report.location.lat && report.location.lon) {
 
-            
+            const color = getMarkerColor(report.sentiment);
+
+            // Use a customized marker icon (Leaflet example)
+            const customIcon = new L.Icon({
+              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+            });
 
             // Create the popup text (Issue + Description)
-
             const popupContent = `
-
                 <b>${report.issueType}</b><br>
-
+                Status: ${report.status}<br>
                 ${report.description}<br>
-
                 <img src="${report.imageUrl}" width="100" style="margin-top:5px;">
-
             `;
 
-
-
             // Add marker to map
-
-            L.marker([report.location.lat, report.location.lon])
-
+            L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
-
                 .bindPopup(popupContent);
 
         }

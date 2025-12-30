@@ -3,9 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CiviQ - Smart Platform</title>
+    <title>CiviQ - Report an Issue</title>
     <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script type="text/javascript">
+        !function(T,l,y){/* ... SDK Loading Snippet ... */}(window,document,{
+
+        src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+
+        crossOrigin: "anonymous",
+
+        cfg: { 
+
+            connectionString: "InstrumentationKey=401d4593-15ae-42c9-9985-7df1d666b88a;IngestionEndpoint=https://uksouth-1.in.applicationinsights.azure.com/;LiveEndpoint=https://uksouth.livediagnostics.monitor.azure.com/;ApplicationId=2687c11c-78d6-4a3b-a8ae-0e27f96b47b4"
+
+        }});
+    </script>
     <style>
         body {
             padding: 20px;
@@ -90,6 +103,22 @@
 
     <h3>Recent Reports</h3>
     
+    <!-- Filter Bar -->
+    <div id="filter-bar" style="padding: 10px; background: #f4f4f4; margin-bottom: 20px;">
+        <select id="typeFilter" onchange="filterReports()">
+            <option value="All">All Issues</option>
+            <option value="Pothole">Potholes</option>
+            <option value="Streetlight">Streetlights</option>
+            <option value="Flytipping">Illegal Dumping</option>
+            <option value="Other">Other</option>
+        </select>
+        <select id="sentimentFilter" onchange="filterReports()">
+            <option value="All">All Priority</option>
+            <option value="negative">Urgent Only</option>
+            <option value="positive">Positive Only</option>
+        </select>
+    </div>
+    
     <div id="mapArea" style="height: 400px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 2px solid #ddd;"></div>
 
     <button onclick="loadReports()" class="btn btn-info">🔄 Refresh List</button>
@@ -97,8 +126,6 @@
     <div id="reportsList" style="margin-top: 20px;">
 
     </div>
-    <!-- testing ci/cd -->
-
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     

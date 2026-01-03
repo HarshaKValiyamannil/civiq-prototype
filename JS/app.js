@@ -272,6 +272,34 @@ function filterReports() {
 // ==========================================
 // 4. HELPER FUNCTIONS
 // ==========================================
+function searchAddress() {
+    const address = document.getElementById('addressSearch').value;
+    if (!address) return alert("Please enter an address");
+
+    // Show loading state
+    document.getElementById('statusMessage').innerText = "🔍 Finding address...";
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.length > 0) {
+            const result = data[0];
+            // Automatically fill your existing coordinate boxes
+            document.getElementById('latitude').value = result.lat;
+            document.getElementById('longitude').value = result.lon;
+            document.getElementById('statusMessage').innerText = "📍 Location found and updated!";
+            
+            // Optional: Move the map to this location
+            if (map) {
+                map.setView([result.lat, result.lon], 15);
+            }
+        } else {
+            document.getElementById('statusMessage').innerText = "❌ Address not found.";
+        }
+    })
+    .catch(err => console.error("Geocoding error:", err));
+}
+
 function getLocation() {
     console.log("Getting location...");
     if (navigator.geolocation) {

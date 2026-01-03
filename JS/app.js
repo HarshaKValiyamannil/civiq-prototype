@@ -142,18 +142,20 @@ function filterReports() {
         filteredReports = filteredReports.filter(report => report.issueType === typeFilter);
     }
     
-    // Apply sentiment filter
+    // Apply sentiment filter (Robust Fix)
     if (sentimentFilter !== 'All') {
         filteredReports = filteredReports.filter(report => {
-            // DEBUG LOG (Delete this after fixing)
-            if (report.sentiment) {
-                console.log(`Checking Report ID: ${report.id}`);
-                console.log(`-- Item Sentiment: '${report.sentiment}'`);
-                console.log(`-- Filter selected: '${sentimentFilter}'`);
-                console.log(`-- Match? ${report.sentiment.toLowerCase() === sentimentFilter.toLowerCase()}`);
-            }
+            // 1. Safety check: Ignore if sentiment is missing
+            if (!report.sentiment) return false; 
             
-            return report.sentiment && report.sentiment.toLowerCase() === sentimentFilter.toLowerCase();
+            // 2. Clean up both strings: Remove spaces and force lowercase
+            const cleanSentiment = report.sentiment.toString().toLowerCase().trim();
+            const cleanFilter = sentimentFilter.toLowerCase().trim();
+            
+            // 3. Debugging: This will show you exactly what is being compared
+            console.log(`Comparing '${cleanSentiment}' to '${cleanFilter}' -> Match: ${cleanSentiment === cleanFilter}`);
+            
+            return cleanSentiment === cleanFilter;
         });
     }
     

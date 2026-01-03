@@ -51,6 +51,11 @@ function submitNewAsset() {
     const long = document.getElementById('longitude').value;
     const fileInput = document.getElementById('imageFile');
 
+    if (!lat || !long) {
+        alert("Please provide a location or click 'Get My Location' before submitting.");
+        return;
+    }
+
     if(fileInput.files.length === 0) {
         alert("Please select a photo!");
         return;
@@ -306,6 +311,15 @@ function initMap(reports) {
     // 4. Add markers
     reports.forEach(report => {
         if (report.location && report.location.lat && report.location.lon) {
+            // Add small random jitter to prevent marker overlap
+            let lat = parseFloat(report.location.lat);
+            let lon = parseFloat(report.location.lon);
+            
+            // Add tiny random offset to prevent perfect overlaps
+            const jitter = 0.0005; // Very small offset
+            lat += (Math.random() - 0.5) * jitter;
+            lon += (Math.random() - 0.5) * jitter;
+            
             const color = getMarkerColor(report.sentiment);
             const customIcon = new L.Icon({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
@@ -323,7 +337,7 @@ function initMap(reports) {
                 <img src="${report.imageUrl}" width="100" style="margin-top:5px;" onerror="this.style.display='none'">
             `;
 
-            L.marker([report.location.lat, report.location.lon], {icon: customIcon})
+            L.marker([lat, lon], {icon: customIcon})
                 .addTo(map)
                 .bindPopup(popupContent);
         }

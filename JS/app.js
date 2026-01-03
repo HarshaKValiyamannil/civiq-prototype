@@ -144,7 +144,11 @@ function filterReports() {
     
     // Apply sentiment filter
     if (sentimentFilter !== 'All') {
-        filteredReports = filteredReports.filter(report => report.sentiment === sentimentFilter);
+        filteredReports = filteredReports.filter(report => {
+            // Safety check: if report has no sentiment, it shouldn't match "negative"
+            // But we ensure we don't crash on undefined
+            return report.sentiment && report.sentiment.toLowerCase() === sentimentFilter.toLowerCase();
+        });
     }
     
     // Clear and redraw map
@@ -219,6 +223,18 @@ function filterReports() {
             </button>
         `;
 
+        // --- NEW: Sentiment Badge Logic ---
+        let sentimentBadge = "";
+        if (report.sentiment) {
+            let badgeColor = "secondary"; // Default (Gray)
+            if (report.sentiment === "negative") badgeColor = "danger"; // Red for Urgent
+            if (report.sentiment === "positive") badgeColor = "success"; // Green for Good
+            
+            // Create the badge HTML
+            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${report.sentiment.toUpperCase()}</span>`;
+        }
+        // ----------------------------------
+
         card.innerHTML = `
             <div style="display:flex; gap: 15px; align-items: start;">
                 <div style="width: 100px; height: 100px; flex-shrink:0;">
@@ -230,7 +246,11 @@ function filterReports() {
                     <p style="margin: 0 0 5px 0;">${report.description || 'No description'}</p>
                     <small class="text-muted">📍 ${report.location?.lat || '?'}, ${report.location?.lon || '?'}</small>
                     <br>
+                    
                     <span class="badge bg-secondary" style="font-size: 0.8em; margin-top: 5px; display:inline-block;">${report.status || 'New'}</span>
+                    
+                    ${sentimentBadge}
+
                     ${aiDisplay}
                     ${voteButton}
                 </div>

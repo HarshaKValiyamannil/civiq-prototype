@@ -159,10 +159,6 @@ function filterReports() {
         });
     }
     
-    // Clear and redraw map
-    if (map) {
-        map.remove();
-    }
     initMap(filteredReports);
     
     // Clear and redraw list
@@ -293,74 +289,45 @@ function getLocation() {
 // ==========================================
 
 function initMap(reports) {
-
-    // 1. If map already exists, clear it so we don't make duplicates
-
-    if (map) {
-
+    // 1. COMPLETELY clear the old map instance and its container
+    if (map != undefined || map != null) {
         map.remove();
-
     }
 
-
-
-    // 2. Create the map centered on Belfast (or your default location)
-
-    // [54.5973, -5.9301] is Belfast. Change if you want a different city.
-
+    // 2. Initialize the map
     map = L.map('mapArea').setView([54.5973, -5.9301], 12);
 
-
-
-    // 3. Add the "Tile Layer" (the actual map images) from OpenStreetMap
-
+    // 3. Add the Tile Layer
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-
         maxZoom: 19,
-
         attribution: '© OpenStreetMap'
-
     }).addTo(map);
 
-
-
-    // 4. Loop through reports and add Red Pins 📍
-
+    // 4. Add markers
     reports.forEach(report => {
-
-        // Only add pin if report has valid location data
-
         if (report.location && report.location.lat && report.location.lon) {
-
             const color = getMarkerColor(report.sentiment);
-
-            // Use a customized marker icon (Leaflet example)
             const customIcon = new L.Icon({
-              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41]
+                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
             });
 
-            // Create the popup text (Issue + Description)
             const popupContent = `
                 <b>${report.issueType}</b><br>
-                Status: ${report.status}<br>
-                ${report.description}<br>
-                <img src="${report.imageUrl}" width="100" style="margin-top:5px;">
+                Status: ${report.status || 'New'}<br>
+                ${report.description || ''}<br>
+                <img src="${report.imageUrl}" width="100" style="margin-top:5px;" onerror="this.style.display='none'">
             `;
 
-            // Add marker to map
             L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
                 .bindPopup(popupContent);
-
         }
-
     });
-
 }
 
 // ==========================================

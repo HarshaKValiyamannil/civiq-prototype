@@ -32,9 +32,17 @@ $(document).ready(function () {
 // 2. SUBMIT REPORT LOGIC
 // ==========================================
 function submitNewAsset() {
-    // Add this line at the very top of the function
-    window.appInsights?.trackEvent({name: 'UserSubmittedReport', properties: {type: document.getElementById('issueType').value}});
-    
+    // START: Add this line
+    if(window.appInsights) {
+        window.appInsights.trackEvent({ 
+            name: 'ReportSubmitted', 
+            properties: { 
+                issueType: document.getElementById('issueType').value 
+            }
+        });
+    }
+    // END: Add this line
+
     console.log("Submit button clicked!"); 
 
     const issueType = document.getElementById('issueType').value;

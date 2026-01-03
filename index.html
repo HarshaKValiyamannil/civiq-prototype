@@ -3,132 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CiviQ - Report an Issue</title>
+    <title>CiviQ - Smart City Platform</title>
     <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script type="text/javascript">
-        !function(T,l,y){/* ... SDK Loading Snippet ... */}(window,document,{
-
-        src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
-
-        crossOrigin: "anonymous",
-
-        cfg: { 
-
-            connectionString: "InstrumentationKey=401d4593-15ae-42c9-9985-7df1d666b88a;IngestionEndpoint=https://uksouth-1.in.applicationinsights.azure.com/;LiveEndpoint=https://uksouth.livediagnostics.monitor.azure.com/;ApplicationId=2687c11c-78d6-4a3b-a8ae-0e27f96b47b4"
-
-        }});
+        !function(T,l,y){
+            var S=T.location,
+                k="script",
+                D="instrumentationKey",
+                C="ingestionendpoint",
+                I="disableExceptionTracking",
+                E="ai.device.",
+                b="toLowerCase",
+                w="crossOrigin",
+                N="POST",
+                e="appInsightsSDK",
+                t=y.name||"appInsights";
+            (y.name||T[e])&&(T[e]=t);
+            var n=T[t]||function(d){
+                var g=!1,
+                    f=!1,
+                    m={initialize:!0,queue:[],sv:"5",version:2,config:d};
+                function v(e,t){
+                    var n={},
+                        a="Browser";
+                    return n[E+"id"]=a[b](),
+                        n[E+"type"]=a,
+                        n["ai.operation.name"]=S&&S.pathname||"_unknown_",
+                        n["ai.internal.sdkVersion"]="javascript:snippet_"+(m.sv||m.version),
+                        {
+                            time:function(){
+                                var e=new Date;
+                                function t(e){
+                                    var n=""+e;
+                                    return 1===n.length&&(n="0"+n),n
+                                }
+                                return e.getUTCFullYear()+"-"+t(e.getUTCMonth()+1)+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"
+                            }(),
+                            iKey:e,
+                            name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,
+                            sampleRate:100,
+                            tags:n,
+                            data:{baseData:{ver:2}}
+                        }
+                }
+                var h=d.url||y.src;
+                if(h){
+                    function a(e){
+                        var t,n,a,i,r,o,s,c,u,p,l;
+                        g=!0,
+                        m.queue=[],
+                        f||(f=!0,
+                        i=h,
+                        s=function(){
+                            var e={},
+                                t=d.connectionString;
+                            if(t)
+                                for(var n=t.split(";"),a=0;a<n.length;a++){
+                                    var i=n[a].split("=");
+                                    2===i.length&&(e[i[0][b]()]=i[1])
+                                }
+                            if(!e[C]){
+                                var r=e.endpointsuffix,
+                                    o=r?e.location:null;
+                                e[C]="https://"+(o?o+".":"")+"dc."+(r||"services.visualstudio.com")
+                            }
+                            return e
+                        }(),
+                        c=s[D]||d[D]||"",
+                        u=s[C],
+                        p=u?u+"/v2/track":d.endpointUrl,
+                        (l=[]).push((t="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",
+                        n=i,
+                        a=p,
+                        (o=(r=v(c,"Exception")).data.baseData).exceptions=[{
+                            typeName:"SDKLoadFailed",
+                            message:t.replace(".",""),
+                            hasFullStack:!1,
+                            stack:t+"\nSnippet failed to load ["+n+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+a,
+                            parsedStack:[]
+                        }],
+                        r)),
+                        l.push(function(e,t,n,a){
+                            var i=v(c,"Message"),
+                                r=i.data.baseData;
+                            r.message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+n+")").replace(/\"/g,"")+'"',
+                            r.properties={endpoint:a},
+                            i
+                        }(0,0,t,p)),
+                        function(e,t){
+                            if(JSON){
+                                var n=T.fetch;
+                                if(n&&!y.useXhr)
+                                    n(t,{method:N,body:JSON.stringify(e),mode:"cors"});
+                                else if(XMLHttpRequest){
+                                    var a=new XMLHttpRequest;
+                                    a.open(N,t),
+                                    a.setRequestHeader("Content-type","application/json"),
+                                    a.send(JSON.stringify(e))
+                                }
+                            }
+                        }(l,p))
+                    }
+                    function i(e,t){
+                        f||setTimeout(function(){
+                            !t&&m.core||a()
+                        },500)
+                    }
+                    var r=function(){
+                        var n=l.createElement(k);
+                        n.src=h;
+                        var e=y[w];
+                        return!e&&""!==e||"undefined"==n[w]||(n[w]=e),
+                            n.onload=i,
+                            n.onerror=a,
+                            n
+                    }();
+                    "undefined"!=typeof void 0?n.onreadystatechange=function(){
+                        "loaded"!==n.readyState&&"complete"!==n.readyState||i()
+                    }:r.onload=i,
+                    l.getElementsByTagName(k)[0].parentNode.appendChild(r)
+                }
+                return m
+            }({
+                connectionString: "InstrumentationKey=401d4593-15ae-42c9-9985-7df1d666b88a;IngestionEndpoint=https://uksouth-1.in.applicationinsights.azure.com/;LiveEndpoint=https://uksouth.livediagnostics.monitor.azure.com/;ApplicationId=2687c11c-78d6-4a3b-a8ae-0e27f96b47b4"
+            });
+            (window[t]=n).queue&&0===n.queue.length&&n.trackPageView({})
+        }(window,document,{
+            src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+            crossOrigin: "anonymous",
+            cfg: { 
+                connectionString: "InstrumentationKey=401d4593-15ae-42c9-9985-7df1d666b88a;IngestionEndpoint=https://uksouth-1.in.applicationinsights.azure.com/;LiveEndpoint=https://uksouth.livediagnostics.monitor.azure.com/;ApplicationId=2687c11c-78d6-4a3b-a8ae-0e27f96b47b4"
+            }
+        });
     </script>
     <style>
         body {
-            padding: 20px;
+            padding-top: 56px;
             background-color: #f8f9fa;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        .container-fluid {
+            padding: 20px;
         }
-        label {
-            font-weight: bold;
-            margin-top: 10px;
-            display: block;
+        .card {
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: .25rem;
         }
-        textarea, input[type="text"], select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+        .form-card {
+            height: 100%;
         }
-        .btn {
-            margin-top: 15px;
+        .map-card {
+            height: 100%;
         }
-        #statusMessage {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
+        .navbar {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+            background-color: #2c3e50 !important;
         }
-        .success {
+        .form-label {
+            font-weight: 500;
+        }
+        .status-success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
         }
-        .error {
+        .status-error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        /* Custom Brand Styling */
+        .navbar-brand,
+        .navbar-dark .navbar-nav .nav-link {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+        }
+        
+        .navbar-brand i {
+            color: white;
+            margin-right: 8px;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #1abc9c;
+        }
+        
+        .card-header {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .btn-primary {
+            background-color: #1abc9c;
+            border-color: #1abc9c;
+            border-radius: 50px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #17a689;
+            border-color: #17a689;
+        }
+        
+        .btn-info {
+            background-color: #1abc9c;
+            border-color: #1abc9c;
+            border-radius: 50px;
+        }
+        
+        .btn-info:hover {
+            background-color: #17a689;
+            border-color: #17a689;
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 50px;
+        }
+        
+        .form-control:focus {
+            border-color: #1abc9c;
+            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+        }
+        
+        .form-select:focus {
+            border-color: #1abc9c;
+            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+        }
+        
+        textarea.form-control:focus,
+        input.form-control:focus {
+            border-bottom: 2px solid #1abc9c;
+        }
+        
+        .card {
+            border-radius: 8px;
+        }
+        
+        #mapArea {
+            border: 4px solid white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn {
+            border-radius: 50px;
+        }
+        
+        .badge.bg-secondary {
+            background-color: #e74c3c !important;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        h3, h4 {
+            color: #2c3e50;
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-label i {
+            margin-right: 8px;
+            color: #2c3e50;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Report an Issue</h2>
-        
-        <label>Issue Type:</label>
-        <select id="issueType" class="form-control">
-            <option value="Pothole">Pothole</option>
-            <option value="Streetlight">Broken Streetlight</option>
-            <option value="Flytipping">Illegal Dumping</option>
-            <option value="Other">Other</option>
-        </select>
-        <br>
-
-        <label>Description:</label>
-        <textarea id="description" class="form-control" placeholder="Describe the issue..."></textarea>
-        <br>
-
-        <label>Location (Lat, Long):</label>
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="latitude" placeholder="Latitude (e.g. 54.59)" class="form-control">
-            <input type="text" id="longitude" placeholder="Longitude (e.g. -5.93)" class="form-control">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-city"></i>
+                CiviQ
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Contact</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <button type="button" onclick="getLocation()" class="btn btn-secondary btn-sm" style="margin-top:5px;">📍 Get My Location</button>
-        <br><br>
+    </nav>
 
-        <label>Photo Evidence:</label>
-        <input type="file" id="imageFile" class="form-control">
-        <br>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Column: Report Issue Form -->
+            <div class="col-lg-4 mb-4">
+                <div class="card form-card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Report an Issue</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="issueType" class="form-label">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Issue Type:
+                            </label>
+                            <select id="issueType" class="form-select">
+                                <option value="Pothole">Pothole</option>
+                                <option value="Streetlight">Broken Streetlight</option>
+                                <option value="Flytipping">Illegal Dumping</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
 
-        <button id="submitBtn" class="btn btn-primary">Submit Report</button>
-        
-        <div id="statusMessage"></div>
-    </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left"></i>
+                                Description:
+                            </label>
+                            <textarea id="description" class="form-control" placeholder="Describe the issue..."></textarea>
+                        </div>
 
-    <hr>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Location (Lat, Long):
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" id="latitude" placeholder="Latitude (e.g. 54.59)" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" id="longitude" placeholder="Longitude (e.g. -5.93)" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" onclick="getLocation()" class="btn btn-outline-secondary btn-sm w-100">
+                                📍 Get My Location
+                            </button>
+                        </div>
 
-    <h3>Recent Reports</h3>
-    
-    <!-- Filter Bar -->
-    <div id="filter-bar" style="padding: 10px; background: #f4f4f4; margin-bottom: 20px;">
-        <select id="typeFilter" onchange="filterReports()">
-            <option value="All">All Issues</option>
-            <option value="Pothole">Potholes</option>
-            <option value="Streetlight">Streetlights</option>
-            <option value="Flytipping">Illegal Dumping</option>
-            <option value="Other">Other</option>
-        </select>
-        <select id="sentimentFilter" onchange="filterReports()">
-            <option value="All">All Priority</option>
-            <option value="negative">Urgent Only</option>
-            <option value="positive">Positive Only</option>
-        </select>
-    </div>
-    
-    <div id="mapArea" style="height: 400px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 2px solid #ddd;"></div>
+                        <div class="mb-3">
+                            <label for="imageFile" class="form-label">
+                                <i class="fas fa-camera"></i>
+                                Photo Evidence:
+                            </label>
+                            <input type="file" id="imageFile" class="form-control">
+                        </div>
 
-    <button onclick="loadReports()" class="btn btn-info">🔄 Refresh List</button>
+                        <button id="submitBtn" class="btn btn-primary w-100">Submit Report</button>
+                        
+                        <div id="statusMessage"></div>
+                    </div>
+                </div>
+            </div>
 
-    <div id="reportsList" style="margin-top: 20px;">
+            <!-- Right Column: Map & Recent Reports -->
+            <div class="col-lg-8">
+                <div class="card map-card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">City Insights</h3>
+                    </div>
+                    
+                    <!-- Filter Bar -->
+                    <div id="filter-bar" class="p-3 bg-light">
+                        <div class="row">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <select id="typeFilter" class="form-select" onchange="filterReports()">
+                                    <option value="All">All Issues</option>
+                                    <option value="Pothole">Potholes</option>
+                                    <option value="Streetlight">Streetlights</option>
+                                    <option value="Flytipping">Illegal Dumping</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <select id="sentimentFilter" class="form-select" onchange="filterReports()">
+                                    <option value="All">All Priority</option>
+                                    <option value="negative">Urgent Only</option>
+                                    <option value="positive">Positive Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div id="mapArea" style="height: 400px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 2px solid #ddd;"></div>
 
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>Recent Reports</h4>
+                            <button onclick="loadReports()" class="btn btn-info">🔄 Refresh List</button>
+                        </div>
+
+                        <div id="reportsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>

@@ -3,9 +3,10 @@ let allReports = []; // Store all reports for filtering
 
 // Add this helper function at the top of your script
 function getMarkerColor(sentiment) {
-    if (sentiment === 'negative') return 'red'; // Urgent
-    if (sentiment === 'positive') return 'green'; // Commendation
-    return 'blue'; // Standard/Neutral
+    const s = (sentiment || "").toString().toLowerCase().trim();
+    if (s === 'negative') return 'red';
+    if (s === 'positive') return 'green';
+    return 'blue';
 }
 
 // ==========================================
@@ -140,42 +141,41 @@ function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
     
-    let filteredReports = allReports;
-    
-    // Apply type filter
-    if (typeFilter !== 'All') {
-        filteredReports = filteredReports.filter(report => report.issueType === typeFilter);
-    }
-    
-    // Apply sentiment filter (Robust Fix)
-    if (sentimentFilter !== 'All') {
-        filteredReports = filteredReports.filter(report => {
-            // 1. Safety check: Ignore if sentiment is missing
-            if (!report.sentiment) return false; 
-            
-            // 2. Clean up both strings: Remove spaces and force lowercase
-            const cleanSentiment = report.sentiment.toString().toLowerCase().trim();
-            const cleanFilter = sentimentFilter.toLowerCase().trim();
-            
-            // 3. Debugging: This will show you exactly what is being compared
-            console.log(`Comparing '${cleanSentiment}' to '${cleanFilter}' -> Match: ${cleanSentiment === cleanFilter}`);
-            
-            return cleanSentiment === cleanFilter;
-        });
-    }
-    
+    let filteredReports = allReports.filter(report => {
+        // Match Type
+        const typeMatch = (typeFilter === 'All' || report.issueType === typeFilter);
+        
+        // Match Sentiment (Handling potential object or string)
+        let reportSentiment = "";
+        if (typeof report.sentiment === 'string') {
+            reportSentiment = report.sentiment;
+        } else if (report.sentiment && report.sentiment.sentiment) {
+            reportSentiment = report.sentiment.sentiment; // Handle Azure AI Object
+        }
+        
+        const cleanSentiment = reportSentiment.toLowerCase().trim();
+        const cleanFilter = sentimentFilter.toLowerCase().trim();
+        const sentimentMatch = (sentimentFilter === 'All' || cleanSentiment === cleanFilter);
+        
+        return typeMatch && sentimentMatch;
+    });
+
+    // Refresh Map and List
     initMap(filteredReports);
-    
-    // Clear and redraw list
+    renderReportList(filteredReports); // Moved list logic to a helper for cleaner code
+}
+
+// Helper function to render report list
+function renderReportList(reports) {
     const listDiv = document.getElementById('reportsList');
     listDiv.innerHTML = "";
-    
-    if (filteredReports.length === 0) {
+
+    if (reports.length === 0) {
         listDiv.innerHTML = "<p>No reports match the selected filters.</p>";
         return;
     }
-    
-    filteredReports.forEach(report => {
+
+    reports.forEach(report => {
         const card = document.createElement('div');
         card.className = "card mb-3 shadow-sm";
         card.style = "border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;";
@@ -234,13 +234,20 @@ function filterReports() {
 
         // --- NEW: Sentiment Badge Logic ---
         let sentimentBadge = "";
-        if (report.sentiment) {
+        let displaySentiment = "";
+        if (typeof report.sentiment === 'string') {
+            displaySentiment = report.sentiment;
+        } else if (report.sentiment && report.sentiment.sentiment) {
+            displaySentiment = report.sentiment.sentiment; // Handle Azure AI Object
+        }
+
+        if (displaySentiment) {
             let badgeColor = "secondary"; // Default (Gray)
-            if (report.sentiment === "negative") badgeColor = "danger"; // Red for Urgent
-            if (report.sentiment === "positive") badgeColor = "success"; // Green for Good
+            if (displaySentiment === "negative") badgeColor = "danger"; // Red for Urgent
+            if (displaySentiment === "positive") badgeColor = "success"; // Green for Good
             
             // Create the badge HTML
-            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${report.sentiment.toUpperCase()}</span>`;
+            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${displaySentiment.toUpperCase()}</span>`;
         }
         // ----------------------------------
 

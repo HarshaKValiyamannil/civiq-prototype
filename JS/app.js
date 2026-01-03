@@ -145,8 +145,14 @@ function filterReports() {
     // Apply sentiment filter
     if (sentimentFilter !== 'All') {
         filteredReports = filteredReports.filter(report => {
-            // Safety check: if report has no sentiment, it shouldn't match "negative"
-            // But we ensure we don't crash on undefined
+            // DEBUG LOG (Delete this after fixing)
+            if (report.sentiment) {
+                console.log(`Checking Report ID: ${report.id}`);
+                console.log(`-- Item Sentiment: '${report.sentiment}'`);
+                console.log(`-- Filter selected: '${sentimentFilter}'`);
+                console.log(`-- Match? ${report.sentiment.toLowerCase() === sentimentFilter.toLowerCase()}`);
+            }
+            
             return report.sentiment && report.sentiment.toLowerCase() === sentimentFilter.toLowerCase();
         });
     }

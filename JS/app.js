@@ -272,23 +272,26 @@ function renderReportList(reports) {
     }
 
     reports.forEach(report => {
-        // AI Tag Logic (Simplified for brevity, keep your full version)
+        // AI Tag Logic
         let aiDisplay = report.aiCaption ? `<div class="ai-insight-box">
                     <div class="ai-insight-title">
-                        <i class="fas fa-search me-1"></i> AI Insight
+                        <i class="fas fa-search"></i>
+                        <span>AI Insight</span>
                     </div>
                     <div class="ai-insight-content">"${report.aiCaption}"</div>
                 </div>` : "";
         
-        // Sentiment Badge (Simplified)
-        let sentimentBadge = `<span class="badge bg-secondary">${report.status || 'Open'}</span>`;
+        // Status Badge with consistent styling
+        const reportStatus = report.status || 'Open';
+        const statusClass = reportStatus === 'Resolved' ? 'status-resolved' : 'status-open';
+        let statusBadge = `<span class="status-badge ${statusClass}">${reportStatus}</span>`;
         
         // Urgent Indicator (Only for negative sentiment)
         const displaySentiment = getSentimentText(report);
         let sentimentIndicator = "";
         
         if (displaySentiment.toLowerCase().trim() === "negative") {
-            sentimentIndicator = `<span class="badge bg-warning ms-2" style="opacity: 0.8; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">urgent</span>`;
+            sentimentIndicator = `<span class="badge-urgent ms-2">urgent</span>`;
         }
 
         // Support/Upvote Button
@@ -320,22 +323,30 @@ function renderReportList(reports) {
         }
 
         const card = document.createElement('div');
-        card.className = "card mb-3 shadow-sm";
-        card.style = "padding: 10px; background: white; border: 1px solid #ddd;";
+        card.className = "card report-card mb-3";
         
         card.innerHTML = `
-            <div class="d-flex gap-3">
-                <img src="${report.imageUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:4px;" onerror="this.src='https://via.placeholder.com/80'">
-                <div style="width: 100%;">
-                    <div class="d-flex justify-content-between">
-                        <h5 class="mb-1 text-primary">${report.issueType} ${sentimentIndicator}</h5>
-                        <small class="text-muted">${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
+            <div class="card-body">
+                <div class="d-flex gap-3">
+                    <img src="${report.imageUrl}" class="report-image" onerror="this.src='https://via.placeholder.com/100'">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="report-title mb-0">
+                                ${report.issueType}
+                                ${sentimentIndicator}
+                            </h5>
+                            <small class="text-muted" style="white-space: nowrap;">${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
+                        </div>
+                        <p class="report-description mb-2">${report.description}</p>
+                        <div class="mb-2">
+                            ${statusBadge}
+                        </div>
+                        ${aiDisplay}
+                        <div class="d-flex gap-2 align-items-center">
+                            ${voteButton}
+                        </div>
+                        ${adminControls}
                     </div>
-                    <p class="mb-1 small">${report.description}</p>
-                    ${sentimentBadge}
-                    ${aiDisplay}
-                    ${voteButton}
-                    ${adminControls} 
                 </div>
             </div>`;
         

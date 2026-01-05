@@ -532,10 +532,18 @@ function resolveIssue(reportId) {
             // 3. Show Loading
             Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
 
-            // 4. Create "Resolved" version of the report
+            // 3. Create a COPY of the report
             const updatedReport = { ...report, status: "Resolved" };
 
-            // 5. Send to Cloud
+            // --- 🚨 THE FIX: REMOVE AZURE SYSTEM FIELDS ---
+            delete updatedReport._rid;
+            delete updatedReport._self;
+            delete updatedReport._etag;
+            delete updatedReport._attachments;
+            delete updatedReport._ts;
+            // ----------------------------------------------
+
+            // 4. Send to Cloud
             fetch(RESOLVE_LOGIC_APP_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -544,7 +552,7 @@ function resolveIssue(reportId) {
             .then(response => {
                 if(response.ok) {
                     Swal.fire("Resolved!", "Citizen notified via Outlook.", "success");
-                    loadReports(); // Refresh list to show green "Resolved" label
+                    loadReports(); 
                 } else {
                     throw new Error("Logic App failed");
                 }

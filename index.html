@@ -11,111 +11,100 @@
     <style>
     /* 1. Base Typography & Layout */
     body {
-        padding-top: 70px; /* More breathing room for navbar */
-        background-color: #f0f2f5; /* Light grey-blue background (Facebook style) */
+        padding-top: 80px;
+        background-color: #f4f6f9; /* Very light cool grey */
         font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        color: #343a40;
+        color: #212529;
     }
 
-    /* 2. Professional Card Styling (Solid, Clean, Shadowed) */
+    /* 2. Unified Card Styling (Fixes the Mismatch) */
     .card {
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         background: #ffffff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Soft, expensive-looking shadow */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        overflow: hidden; /* Keeps images inside rounded corners */
-        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Clean, professional shadow */
+        margin-bottom: 24px;
+        overflow: hidden; /* Ensures headers stay rounded */
     }
 
-    /* 3. Headers & Brand */
+    /* 3. High-Contrast Headers (Deep Navy) */
     .navbar {
-        background: linear-gradient(135deg, #0061f2, #00c6ff) !important; /* "Bright Civic Blue" Gradient */
-        box-shadow: 0 2px 10px rgba(0, 65, 130, 0.15);
-        padding: 12px 0;
+        background-color: #1a252f !important; /* Dark Slate Blue */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        padding: 15px 0;
     }
     .navbar-brand {
         font-weight: 700;
-        letter-spacing: 0.5px;
-        font-size: 1.4rem;
-    }
-    .card-header {
-        background-color: #ffffff;
-        border-bottom: 1px solid #f0f0f0;
-        padding: 15px 20px;
-    }
-    .card-header h3 {
-        color: #0061f2; /* Matches Navbar */
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0;
-    }
-
-    /* 4. "Citizen-Friendly" Forms */
-    .form-control, .form-select {
-        border: 2px solid #e9ecef;
-        border-radius: 8px;
-        padding: 10px;
-        transition: all 0.2s;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #0061f2; /* Blue focus ring */
-        box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1);
-    }
-    .form-label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-    }
-    .form-label i {
-        color: #00c6ff; /* Cyan icon accents */
-        margin-right: 8px;
-        width: 20px;
-        text-align: center;
-    }
-
-    /* 5. Action Buttons (Bright & Accessible) */
-    .btn {
-        border-radius: 8px; /* Slightly rounded, modern */
-        padding: 10px 20px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-    }
-    .btn-primary {
-        background-color: #0061f2; /* Primary Blue */
-        border: none;
-    }
-    .btn-primary:hover {
-        background-color: #0050c8;
-        transform: translateY(-1px);
-    }
-    /* "Submit" Button - Make it stand out */
-    #submitBtn {
-        background: #00b894; /* "Mint Green" - Friendly & Positive */
-        color: white;
-        font-size: 1.1rem;
-    }
-    #submitBtn:hover {
-        background: #00a180;
-        box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
-    }
-
-    /* 6. Map Area Styling */
-    #mapArea {
-        border-radius: 12px;
-        border: 1px solid #dee2e6;
+        letter-spacing: 1px;
+        font-size: 1.5rem;
+        color: #ffffff !important;
     }
     
-    /* 7. Badges & Tags */
-    .badge {
-        padding: 6px 12px;
-        font-weight: 500;
-        border-radius: 20px;
+    /* Unified Card Headers */
+    .card-header {
+        background-color: #2c3e50; /* Matches the "Professional" dark theme */
+        color: #ffffff;
+        padding: 15px 20px;
+        border-bottom: 3px solid #e67e22; /* ORANGE ACCENT LINE */
     }
-    .badge.bg-danger { background-color: #ff6b6b !important; } /* Softer Red */
-    .badge.bg-success { background-color: #20bf6b !important; } /* Vibrant Green */
-    .badge.bg-secondary { background-color: #a5b1c2 !important; } /* Cool Grey */
+    .card-header h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* 4. Form Elements (High Legibility) */
+    .form-label {
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 6px;
+    }
+    .form-control, .form-select {
+        border: 2px solid #dfe6e9;
+        border-radius: 6px;
+        padding: 10px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #e67e22; /* Orange focus ring */
+        box-shadow: none;
+    }
+
+    /* 5. Action Buttons (Orange & Green Accents) */
+    .btn {
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 10px 24px;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    /* Primary Action (Submit) -> ORANGE */
+    #submitBtn {
+        background-color: #e67e22; 
+        color: white;
+    }
+    #submitBtn:hover {
+        background-color: #d35400; /* Darker Orange */
+        transform: translateY(-2px);
+    }
+
+    /* Secondary Action (Refresh) -> GREEN */
+    .btn-info {
+        background-color: #27ae60 !important; /* Emerald Green */
+        color: white !important;
+    }
+    .btn-info:hover {
+        background-color: #219150 !important;
+    }
+
+    /* 6. Map Area Border */
+    #mapArea {
+        border: 2px solid #bdc3c7;
+        border-radius: 6px;
+    }
 </style>
 </head>
 <body>
@@ -150,8 +139,8 @@
             <!-- Left Column: Report Issue Form -->
             <div class="col-lg-4 mb-4">
                 <div class="card form-card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Report an Issue</h3>
+                    <div class="card-header">
+                        <h3><i class="fas fa-edit"></i> Report an Issue</h3>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -225,8 +214,8 @@
             <!-- Right Column: Map & Recent Reports -->
             <div class="col-lg-8">
                 <div class="card map-card">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">City Insights</h3>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3><i class="fas fa-map-marked-alt"></i> City Insights</h3>
                     </div>
                     
                     <!-- Filter Bar -->

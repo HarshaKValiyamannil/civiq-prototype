@@ -265,7 +265,14 @@ function renderReportList(reports) {
         // AI Tag Logic
         let aiDisplay = "";
         if (report.aiCaption) {
-            aiDisplay = `<div style="margin-top:10px; font-size:0.9em; color:#555;">🤖 ${report.aiCaption}</div>`;
+            // NEW: Clean "Insight" Box
+            aiDisplay = `
+                <div class="mt-2 p-2 bg-light rounded border-start border-4 border-info">
+                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">
+                        <i class="fas fa-robot me-1"></i> AI Analysis
+                    </small>
+                    <div class="small text-dark mt-1">"${report.aiCaption}"</div>
+                </div>`;
         }
 
         // Sentiment Badge Logic (Using Helper)
@@ -280,6 +287,15 @@ function renderReportList(reports) {
             sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${displaySentiment.toUpperCase()}</span>`;
         }
 
+        // NEW: Professional "Support" Button
+        const voteButton = `
+            <button class="btn btn-sm btn-outline-primary mt-3 d-flex align-items-center gap-2" 
+                    onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
+                <i class="fas fa-arrow-up"></i> 
+                <span>Support</span>
+                <span class="badge bg-primary text-white rounded-pill">${report.votes || 0}</span>
+            </button>`;
+
         const card = document.createElement('div');
         card.className = "card mb-3 shadow-sm";
         card.style = "padding: 10px; background: white; border: 1px solid #ddd;";
@@ -291,7 +307,7 @@ function renderReportList(reports) {
                     <p class="mb-1 small">${report.description}</p>
                     ${sentimentBadge}
                     ${aiDisplay}
-                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="upvoteReport('${report.id}', '${report.issueType}', this)">👍 ${report.votes || 0}</button>
+                    ${voteButton}
                 </div>
             </div>`;
         

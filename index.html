@@ -9,199 +9,114 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            padding-top: 56px;
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-        .container-fluid {
-            padding: 20px;
-        }
-        .card {
-            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-            border: 1px solid rgba(0,0,0,.125);
-            border-radius: .25rem;
-        }
-        .form-card {
-            height: 100%;
-        }
-        .map-card {
-            height: 100%;
-        }
-        .navbar {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
-            background-color: #2c3e50 !important;
-        }
-        .form-label {
-            font-weight: 500;
-        }
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        
-        /* Custom Brand Styling */
-        .navbar-brand,
-        .navbar-dark .navbar-nav .nav-link {
-            color: #ffffff;
-            font-weight: 500;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-        }
-        
-        .navbar-brand i {
-            color: white;
-            margin-right: 8px;
-        }
-        
-        .navbar-dark .navbar-nav .nav-link:hover {
-            color: #1abc9c;
-        }
-        
-        .card-header {
-            background-color: #2c3e50;
-            color: white;
-        }
-        
-        .btn-primary {
-            background-color: #1abc9c;
-            border-color: #1abc9c;
-            border-radius: 50px;
-        }
-        
-        .btn-primary:hover {
-            background-color: #17a689;
-            border-color: #17a689;
-        }
-        
-        .btn-info {
-            background-color: #1abc9c;
-            border-color: #1abc9c;
-            border-radius: 50px;
-        }
-        
-        .btn-info:hover {
-            background-color: #17a689;
-            border-color: #17a689;
-        }
-        
-        .btn-outline-secondary {
-            border-radius: 50px;
-        }
-        
-        .form-control:focus {
-            border-color: #1abc9c;
-            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
-        }
-        
-        .form-select:focus {
-            border-color: #1abc9c;
-            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
-        }
-        
-        textarea.form-control:focus,
-        input.form-control:focus {
-            border-bottom: 2px solid #1abc9c;
-        }
-        
-        .card {
-            border-radius: 8px;
-        }
-        
-        #mapArea {
-            border: 4px solid white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn {
-            border-radius: 50px;
-        }
-        
-        .badge.bg-secondary {
-            background-color: #e74c3c !important;
-        }
-        
-        .error-message {
-            color: #e74c3c;
-            font-weight: 500;
-        }
-        
-        h3, h4 {
-            color: #2c3e50;
-        }
-        
-        .form-label {
-            display: flex;
-            align-items: center;
-        }
-        
-        .form-label i {
-            margin-right: 8px;
-            color: #2c3e50;
-        }
-        
-        /* Glassmorphism Card Effect */
-        .card {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-        }
-        
-        /* Gradient Submit Button */
-        #submitBtn {
-            background: linear-gradient(135deg, #1abc9c, #3498db);
-            border: none;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-        }
-        
-        #submitBtn:hover {
-            background: linear-gradient(135deg, #17a689, #2980b9);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
-        }
-        
-        /* Adjust card header for glass effect */
-        .card-header {
-            background: rgba(44, 62, 80, 0.25) !important;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            color: white;
-        }
-        
-        /* Adjust form card specifically */
-        .form-card {
-            background: rgba(255, 255, 255, 0.15) !important;
-        }
-        
-        /* Adjust map card specifically */
-        .map-card {
-            background: rgba(255, 255, 255, 0.15) !important;
-        }
-    </style>
+    /* 1. Base Typography & Layout */
+    body {
+        padding-top: 70px; /* More breathing room for navbar */
+        background-color: #f0f2f5; /* Light grey-blue background (Facebook style) */
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        color: #343a40;
+    }
+
+    /* 2. Professional Card Styling (Solid, Clean, Shadowed) */
+    .card {
+        border: none;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Soft, expensive-looking shadow */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden; /* Keeps images inside rounded corners */
+        margin-bottom: 20px;
+    }
+
+    /* 3. Headers & Brand */
+    .navbar {
+        background: linear-gradient(135deg, #0061f2, #00c6ff) !important; /* "Bright Civic Blue" Gradient */
+        box-shadow: 0 2px 10px rgba(0, 65, 130, 0.15);
+        padding: 12px 0;
+    }
+    .navbar-brand {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        font-size: 1.4rem;
+    }
+    .card-header {
+        background-color: #ffffff;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 15px 20px;
+    }
+    .card-header h3 {
+        color: #0061f2; /* Matches Navbar */
+        font-weight: 700;
+        font-size: 1.25rem;
+        margin: 0;
+    }
+
+    /* 4. "Citizen-Friendly" Forms */
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 10px;
+        transition: all 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0061f2; /* Blue focus ring */
+        box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .form-label i {
+        color: #00c6ff; /* Cyan icon accents */
+        margin-right: 8px;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* 5. Action Buttons (Bright & Accessible) */
+    .btn {
+        border-radius: 8px; /* Slightly rounded, modern */
+        padding: 10px 20px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .btn-primary {
+        background-color: #0061f2; /* Primary Blue */
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #0050c8;
+        transform: translateY(-1px);
+    }
+    /* "Submit" Button - Make it stand out */
+    #submitBtn {
+        background: #00b894; /* "Mint Green" - Friendly & Positive */
+        color: white;
+        font-size: 1.1rem;
+    }
+    #submitBtn:hover {
+        background: #00a180;
+        box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+    }
+
+    /* 6. Map Area Styling */
+    #mapArea {
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* 7. Badges & Tags */
+    .badge {
+        padding: 6px 12px;
+        font-weight: 500;
+        border-radius: 20px;
+    }
+    .badge.bg-danger { background-color: #ff6b6b !important; } /* Softer Red */
+    .badge.bg-success { background-color: #20bf6b !important; } /* Vibrant Green */
+    .badge.bg-secondary { background-color: #a5b1c2 !important; } /* Cool Grey */
+</style>
 </head>
 <body>
     <!-- Navbar -->
@@ -329,7 +244,7 @@
                             <div class="col-md-6">
                                 <select id="sentimentFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Reports</option>
-                                    <option value="negative">⚠️ Urgent / Safety Hazard</option>
+                                    <option value="negative">Urgent Priority (Safety Hazard)</option>
                                 </select>
                             </div>
                         </div>

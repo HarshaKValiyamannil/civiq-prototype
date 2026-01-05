@@ -291,6 +291,15 @@ function renderReportList(reports) {
             sentimentIndicator = `<span class="badge bg-warning ms-2" style="opacity: 0.8; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">urgent</span>`;
         }
 
+        // Support/Upvote Button
+        const voteButton = `
+            <button class="btn btn-outline-primary btn-sm mt-2 d-flex align-items-center gap-2" 
+                    onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
+                <i class="fas fa-arrow-up"></i>
+                <span>Support</span>
+                <span class="badge bg-primary text-white rounded-pill">${report.votes || 0}</span>
+            </button>`;
+
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
         
@@ -325,6 +334,7 @@ function renderReportList(reports) {
                     <p class="mb-1 small">${report.description}</p>
                     ${sentimentBadge}
                     ${aiDisplay}
+                    ${voteButton}
                     ${adminControls} 
                 </div>
             </div>`;

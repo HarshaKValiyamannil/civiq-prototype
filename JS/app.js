@@ -567,6 +567,13 @@ function openReportModal(reportId) {
     document.getElementById('modalDesc').innerText = report.description;
     document.getElementById('modalLocation').innerText = `${report.location.lat}, ${report.location.lon}`;
     
+    // --- NEW: SETUP VIEW ON MAP BUTTON ---
+    const mapBtn = document.getElementById('btnViewOnMap');
+    mapBtn.onclick = function() {
+        jumpToMap(report.location.lat, report.location.lon);
+    };
+    // -------------------------------------
+    
     const statusSpan = document.getElementById('modalStatus');
     statusSpan.innerText = report.status || 'Open';
     statusSpan.className = report.status === 'Resolved' ? 'badge bg-success' : 'badge bg-primary';
@@ -723,4 +730,26 @@ function changePage(newPage) {
     
     // Scroll to top of list so user sees new items
     document.getElementById('reportsList').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==========================================
+// 11. MAP NAVIGATION HELPER
+// ==========================================
+function jumpToMap(lat, lon) {
+    // 1. Close the Modal
+    const modalEl = document.getElementById('reportModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+
+    // 2. Scroll the page up to the map (important for mobile/small screens)
+    document.getElementById('mapArea').scrollIntoView({ behavior: 'smooth' });
+
+    // 3. "Fly" the map to the location
+    if (map) {
+        // flyTo gives a smooth zooming animation compared to setView
+        map.flyTo([lat, lon], 16, {
+            animate: true,
+            duration: 1.5 // Animation speed in seconds
+        });
+    }
 }

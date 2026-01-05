@@ -465,7 +465,7 @@
                     <!-- Filter Bar -->
                     <div id="filter-bar" class="p-3" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
                         <div class="row">
-                            <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="col-md-4 mb-2 mb-md-0">
                                 <select id="typeFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Issues</option>
                                     <option value="Pothole">Potholes</option>
@@ -474,7 +474,14 @@
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4 mb-2 mb-md-0">
+                                <select id="statusFilter" class="form-select" onchange="filterReports()">
+                                    <option value="Open">Active Issues (Default)</option>
+                                    <option value="Resolved">✅ Resolved Issues</option>
+                                    <option value="All">Show All History</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
                                 <select id="sentimentFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Reports</option>
                                     <option value="negative">Urgent Priority (Safety Hazard)</option>

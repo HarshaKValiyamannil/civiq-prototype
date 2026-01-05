@@ -229,14 +229,21 @@ function loadReports() {
 function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value; // <-- NEW
     
-    console.log(`🚀 Filtering: Type=${typeFilter}, Sentiment=${sentimentFilter}`);
+    console.log(`🚀 Filtering: Type=${typeFilter}, Sentiment=${sentimentFilter}, Status=${statusFilter}`);
 
     let filteredReports = allReports.filter(report => {
-        // Filter Type
+        // 1. Filter Type
         if (typeFilter !== 'All' && report.issueType !== typeFilter) return false;
 
-        // Filter Sentiment
+        // 2. Filter Status (NEW)
+        // If status is NOT 'All', and report status doesn't match, hide it.
+        // (We treat undefined status as 'Open')
+        const rStatus = report.status || 'Open'; 
+        if (statusFilter !== 'All' && rStatus !== statusFilter) return false;
+
+        // 3. Filter Sentiment
         if (sentimentFilter !== 'All') {
             const sentimentText = getSentimentText(report); // Use helper
             const cleanValue = sentimentText.toLowerCase().trim();
@@ -355,7 +362,7 @@ function renderReportList(reports) {
 }
 
 // ==========================================
-// 7. MAP LOGIC (The Fix for Red Pins)
+// 7. MAP LOGIC (The Ghost Pin Strategy)
 // ==========================================
 function initMap(reports) {
     map = L.map('mapArea').setView([54.5973, -5.9301], 12);
@@ -365,9 +372,18 @@ function initMap(reports) {
         if (report.location && report.location.lat) {
             const sentimentText = getSentimentText(report);
             
-            // Only use red markers for negative sentiment, blue for all others
-            const color = sentimentText.toLowerCase().trim() === 'negative' ? 'red' : 'blue';
+            // Ghost Pin Strategy: Color coding based on status and sentiment
+            let color = 'blue'; // Default
             
+            if (report.status === 'Resolved') {
+                color = 'grey'; // ⚪ FIXED: Grey for resolved (ghost pins)
+            } else if (sentimentText.toLowerCase().trim() === 'negative') {
+                color = 'red';  // 🔴 URGENT: Red for negative/open issues
+            } else {
+                color = 'blue'; // 🔵 NORMAL: Blue for positive/neutral open issues
+            }
+            
+            // Create marker with appropriate color
             const customIcon = new L.Icon({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -376,7 +392,7 @@ function initMap(reports) {
 
             L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
-                .bindPopup(`<b>${report.issueType}</b><br>${report.description}`);
+                .bindPopup(`<b>${report.issueType}</b><br>Status: ${report.status || 'Open'}<br>${report.description}<br><img src="${report.imageUrl}" style="max-width:150px;" onerror="this.style.display='none'">`);
         }
     });
 }

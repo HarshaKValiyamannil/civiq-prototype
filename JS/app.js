@@ -618,10 +618,13 @@ function openReportModal(reportId) {
     new bootstrap.Modal(document.getElementById('reportModal')).show();
 }
 
+// Updated to accept 'issueType'
 function deleteReport(reportId, issueType) {
+    console.log("Attempting delete:", reportId, issueType); // Debugging line
+
     Swal.fire({
         title: 'Are you sure?',
-        text: "You won\'t be able to revert this!",
+        text: "You won't be able to revert this!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -630,19 +633,30 @@ function deleteReport(reportId, issueType) {
         if (result.isConfirmed) {
             Swal.fire({ title: 'Deleting...', didOpen: () => Swal.showLoading() });
 
-            // Update the delete call to send issueType
             fetch(DELETE_LOGIC_APP_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     "id": reportId, 
-                    "issueType": issueType // <--- ADD THIS
+                    "issueType": issueType // <--- CRITICAL: Sending the partition key
                 })
             })
-            .then(() => {
-                Swal.fire("Deleted!", "Report has been removed.", "success");
-                bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
-                loadReports(); // Refresh the grid
+            .then(response => {
+                if (response.ok) {
+                    Swal.fire("Deleted!", "Report has been removed.", "success");
+                    // Close modal
+                    const modalEl = document.getElementById('reportModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                    // Refresh grid
+                    loadReports(); 
+                } else {
+                    throw new Error("Cloud rejected delete request");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire("Error", "Could not delete. Check console for details.", "error");
             });
         }
     });

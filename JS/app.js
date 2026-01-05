@@ -9,14 +9,14 @@ function getMarkerColor(sentiment) {
     return 'blue';
 }
 
-// HELPER: smart sentiment extractor
+// HELPER: Smartly extract sentiment from ANY format or casing
 function getSentimentText(report) {
-    // 1. Get the raw data (singular or plural)
-    let raw = report.sentiments || report.sentiment;
+    // 1. Check ALL possible casing variations
+    let raw = report.sentiments || report.sentiment || report.Sentiments || report.Sentiment;
     
     if (!raw) return "neutral";
 
-    // 2. If it's a string that looks like a JSON object, Parse it!
+    // 2. If it's a string that looks like JSON, parse it
     if (typeof raw === 'string' && raw.trim().startsWith('{')) {
         try {
             raw = JSON.parse(raw);
@@ -25,17 +25,14 @@ function getSentimentText(report) {
         }
     }
 
-    // 3. Now look for the value in common Azure AI paths
+    // 3. Extract value from Azure AI structures
     if (raw.documents && Array.isArray(raw.documents) && raw.documents.length > 0) {
-        // Path: { documents: [ { sentiment: "negative" } ] }
         return raw.documents[0].sentiment; 
     } 
     else if (raw.sentiment) {
-        // Path: { sentiment: "negative" }
         return raw.sentiment;
     }
     else if (typeof raw === 'string') {
-        // Path: "negative"
         return raw;
     }
 
@@ -174,7 +171,7 @@ function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
     
-    console.log("🚀 Filtering reports...");
+    console.log(`🚀 Starting Filter: Type='${typeFilter}', Sentiment='${sentimentFilter}'`);
 
     let filteredReports = allReports.filter(report => {
         // Filter Type
@@ -182,9 +179,14 @@ function filterReports() {
 
         // Filter Sentiment
         if (sentimentFilter !== 'All') {
-            // USE THE NEW HELPER
             const sentimentText = getSentimentText(report);
             
+            // X-RAY LOG: This will tell us EXACTLY why it fails or passes
+            console.log(`🔍 Checking Report: ${report.issueType}`);
+            console.log(`   - Raw Data:`, report.sentiments || report.sentiment);
+            console.log(`   - Parsed Text: '${sentimentText}'`);
+            console.log(`   - Matching against: '${sentimentFilter}'`);
+
             const cleanValue = sentimentText.toLowerCase().trim();
             const cleanFilter = sentimentFilter.toLowerCase().trim();
             
@@ -192,6 +194,8 @@ function filterReports() {
         }
         return true;
     });
+
+    console.log(`✅ Found ${filteredReports.length} matches.`);
 
     if (map) { map.remove(); map = null; }
     initMap(filteredReports);

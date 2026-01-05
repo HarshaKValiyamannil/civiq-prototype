@@ -9,6 +9,39 @@ function getMarkerColor(sentiment) {
     return 'blue';
 }
 
+// HELPER: smart sentiment extractor
+function getSentimentText(report) {
+    // 1. Get the raw data (singular or plural)
+    let raw = report.sentiments || report.sentiment;
+    
+    if (!raw) return "neutral";
+
+    // 2. If it's a string that looks like a JSON object, Parse it!
+    if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+        try {
+            raw = JSON.parse(raw);
+        } catch (e) {
+            console.warn("Failed to parse sentiment JSON:", e);
+        }
+    }
+
+    // 3. Now look for the value in common Azure AI paths
+    if (raw.documents && Array.isArray(raw.documents) && raw.documents.length > 0) {
+        // Path: { documents: [ { sentiment: "negative" } ] }
+        return raw.documents[0].sentiment; 
+    } 
+    else if (raw.sentiment) {
+        // Path: { sentiment: "negative" }
+        return raw.sentiment;
+    }
+    else if (typeof raw === 'string') {
+        // Path: "negative"
+        return raw;
+    }
+
+    return "neutral";
+}
+
 // ==========================================
 // CONFIGURATION: YOUR LOGIC APP URLS
 // ==========================================
@@ -137,7 +170,6 @@ function loadReports() {
 // ==========================================
 // 7. FILTER LOGIC
 // ==========================================
-// 1. Updated filterReports (Now draws the list!)
 function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
@@ -145,26 +177,14 @@ function filterReports() {
     console.log("🚀 Filtering reports...");
 
     let filteredReports = allReports.filter(report => {
-        // --- Filter by Type ---
-        if (typeFilter !== 'All' && report.issueType !== typeFilter) {
-            return false;
-        }
+        // Filter Type
+        if (typeFilter !== 'All' && report.issueType !== typeFilter) return false;
 
-        // --- Filter by Sentiment ---
+        // Filter Sentiment
         if (sentimentFilter !== 'All') {
-            // Check both singular AND plural fields
-            const rawSentiment = report.sentiments || report.sentiment; 
-
-            if (!rawSentiment) return false; 
-
-            // Handle object vs string
-            let sentimentText = "";
-            if (typeof rawSentiment === 'object') {
-                sentimentText = rawSentiment.sentiment || rawSentiment.label || JSON.stringify(rawSentiment);
-            } else {
-                sentimentText = rawSentiment.toString();
-            }
-
+            // USE THE NEW HELPER
+            const sentimentText = getSentimentText(report);
+            
             const cleanValue = sentimentText.toLowerCase().trim();
             const cleanFilter = sentimentFilter.toLowerCase().trim();
             
@@ -173,14 +193,8 @@ function filterReports() {
         return true;
     });
 
-    // 1. Refresh Map
-    if (map) {
-        map.remove();
-        map = null;
-    }
+    if (map) { map.remove(); map = null; }
     initMap(filteredReports);
-
-    // 2. Refresh List (THIS WAS MISSING!)
     renderReportList(filteredReports);
 }
 
@@ -224,19 +238,10 @@ function renderReportList(reports) {
                 </div>`;
         }
 
-        // --- Sentiment Badge Logic (Updated for 'sentiments') ---
-        let sentimentBadge = "";
+        // USE THE NEW HELPER
+        const displaySentiment = getSentimentText(report);
         
-        // Check plural first, then singular
-        const rawSentiment = report.sentiments || report.sentiment;
-        let displaySentiment = "";
-
-        if (typeof rawSentiment === 'string') {
-            displaySentiment = rawSentiment;
-        } else if (rawSentiment && rawSentiment.sentiment) {
-            displaySentiment = rawSentiment.sentiment;
-        }
-
+        let sentimentBadge = "";
         if (displaySentiment) {
             let badgeColor = "secondary";
             const s = displaySentiment.toLowerCase().trim();
@@ -329,7 +334,6 @@ function getLocation() {
 
 // ==========================================
 
-// 2. Updated initMap (Ensures colors work with 'sentiments')
 function initMap(reports) {
     map = L.map('mapArea').setView([54.5973, -5.9301], 12);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -339,17 +343,8 @@ function initMap(reports) {
     reports.forEach(report => {
         if (report.location && report.location.lat && report.location.lon) {
             
-            // FIX: Pass the plural 'sentiments' to get the right color
-            const rawSentiment = report.sentiments || report.sentiment;
-            
-            // Quick logic to extract string for color check
-            let sentimentText = "";
-            if (typeof rawSentiment === 'object') {
-                sentimentText = rawSentiment.sentiment || "neutral";
-            } else {
-                sentimentText = rawSentiment || "neutral";
-            }
-
+            // USE THE NEW HELPER
+            const sentimentText = getSentimentText(report);
             const color = getMarkerColor(sentimentText);
 
             const customIcon = new L.Icon({

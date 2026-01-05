@@ -406,3 +406,75 @@ function upvoteReport(docId, issueType, btn) {
         btn.disabled = false;
     });
 }
+
+// ==========================================
+// 9. AUTHENTICATION (SIMULATED)
+// ==========================================
+
+// Check if user is logged in when page loads
+function checkAuth() {
+    const user = localStorage.getItem("civiq_user");
+    if (user) {
+        showLoggedInState(user);
+    } else {
+        showLoggedOutState();
+    }
+}
+
+// Run this on startup
+$(document).ready(function() {
+    checkAuth();
+});
+
+// Handle the Login Form Submit
+function handleLogin(event) {
+    event.preventDefault(); // Stop page reload
+    
+    // Get the email they typed (or the default one)
+    const email = document.getElementById('loginEmail').value;
+    const name = email.split('@')[0]; // Use the part before '@' as the name
+    
+    // Save to browser memory
+    localStorage.setItem("civiq_user", name);
+    
+    // Close modal
+    const modalEl = document.getElementById('loginModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+
+    // Update UI
+    Swal.fire({
+        icon: 'success',
+        title: 'Welcome back!',
+        text: 'You are now signed in as ' + name,
+        timer: 1500,
+        showConfirmButton: false
+    });
+    
+    showLoggedInState(name);
+}
+
+function logoutUser() {
+    localStorage.removeItem("civiq_user");
+    showLoggedOutState();
+    Swal.fire({
+        icon: 'info',
+        title: 'Signed Out',
+        timer: 1000,
+        showConfirmButton: false
+    });
+}
+
+function showLoggedInState(username) {
+    document.getElementById('loginButtonSection').style.display = 'none';
+    document.getElementById('userProfileSection').style.display = 'block';
+    
+    // Set Name and Initials
+    document.getElementById('userNameDisplay').innerText = username;
+    document.getElementById('userInitials').innerText = username.substring(0,2).toUpperCase();
+}
+
+function showLoggedOutState() {
+    document.getElementById('loginButtonSection').style.display = 'block';
+    document.getElementById('userProfileSection').style.display = 'none';
+}

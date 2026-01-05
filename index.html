@@ -322,15 +322,27 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Home</a>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3">
+                        <a class="nav-link active" href="#">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Dashboard</a>
+                    
+                    <li class="nav-item dropdown" id="userProfileSection" style="display: none;">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <div style="width: 32px; height: 32px; background: #e67e22; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                <span id="userInitials">JD</span>
+                            </div>
+                            <span id="userNameDisplay" class="text-white">John Doe</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="logoutUser()">Sign Out</a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
+
+                    <li class="nav-item" id="loginButtonSection">
+                        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -457,6 +469,37 @@
 
                         <div id="reportsList"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title"><i class="fas fa-user-circle me-2"></i>Sign In</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Use your CiviQ Citizen ID to access the platform.</p>
+                    <form onsubmit="handleLogin(event)">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="citizen@civiq.com" required value="demo@civiq.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" value="password123">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" style="background-color: #e67e22; border: none;">
+                            Sign In
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <small class="text-muted">For demo purposes, just click "Sign In"</small>
                 </div>
             </div>
         </div>

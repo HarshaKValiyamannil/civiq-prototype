@@ -17,6 +17,31 @@ const VIEW_URL = "https://prod-14.uksouth.logic.azure.com:443/workflows/1f435b6d
 // 1. HELPER FUNCTIONS (The "Brains")
 // ==========================================
 
+// Helper: Render skeleton loader while data loads
+function renderSkeletonLoader() {
+    const skeletonCards = [];
+    for (let i = 0; i < 3; i++) {
+        skeletonCards.push(`
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body" style="padding: 10px; background: white; border: 1px solid #ddd;">
+                    <div class="d-flex gap-3">
+                        <div class="bg-light" style="width:80px; height:80px; border-radius:4px;"></div>
+                        <div style="flex: 1;">
+                            <h5 class="mb-1 bg-light placeholder-glow" style="height: 20px; border-radius: 4px;"><span class="placeholder col-6"></span></h5>
+                            <p class="mb-1 small bg-light placeholder-glow" style="height: 15px; border-radius: 4px;"><span class="placeholder col-8"></span></p>
+                            <p class="mb-1 small bg-light placeholder-glow" style="height: 15px; width: 60%; border-radius: 4px;"><span class="placeholder col-4"></span></p>
+                            <div class="mt-2">
+                                <span class="btn btn-sm btn-outline-secondary placeholder" style="width: 60px; height: 25px;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+    return skeletonCards.join('');
+}
+
 // Helper: Determine marker color
 function getMarkerColor(sentiment) {
     const s = (sentiment || "").toString().toLowerCase().trim();
@@ -77,11 +102,21 @@ function submitNewAsset() {
     const fileInput = document.getElementById('imageFile');
 
     if (!lat || !long) {
-        alert("Please provide a location!");
+        Swal.fire({
+            icon: 'error',
+            title: 'Location Required',
+            text: 'Please provide a location or click "Get My Location" before submitting.',
+            confirmButtonColor: '#1abc9c'
+        });
         return;
     }
     if(fileInput.files.length === 0) {
-        alert("Please select a photo!");
+        Swal.fire({
+            icon: 'error',
+            title: 'Photo Required',
+            text: 'Please select a photo before submitting!',
+            confirmButtonColor: '#1abc9c'
+        });
         return;
     }
 
@@ -109,15 +144,31 @@ function submitNewAsset() {
         })
         .then(response => {
             if (response.ok) {
-                document.getElementById('statusMessage').innerText = "✅ Report Submitted!";
-                setTimeout(loadReports, 2000); 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Report Submitted!',
+                    text: 'Your report has been successfully submitted.',
+                    confirmButtonColor: '#1abc9c'
+                }).then(() => {
+                    setTimeout(loadReports, 2000); 
+                });
             } else {
-                document.getElementById('statusMessage').innerText = "❌ Error submitting.";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Error',
+                    text: 'There was an error submitting your report.',
+                    confirmButtonColor: '#1abc9c'
+                });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('statusMessage').innerText = "❌ Network Error.";
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Please check your connection and try again.',
+                confirmButtonColor: '#1abc9c'
+            });
         });
     };
 }
@@ -128,7 +179,9 @@ function submitNewAsset() {
 function loadReports() {
     console.log("🔄 Loading reports...");
     const listDiv = document.getElementById('reportsList');
-    listDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span>Loading...</span></div>';
+    
+    // Show skeleton loader immediately
+    listDiv.innerHTML = renderSkeletonLoader();
 
     fetch(VIEW_URL)
     .then(response => response.json())
@@ -276,7 +329,15 @@ function initMap(reports) {
 // ==========================================
 function searchAddress() {
     const address = document.getElementById('addressSearch').value;
-    if (!address) return alert("Enter an address");
+    if (!address) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Address Required',
+            text: 'Please enter an address to search.',
+            confirmButtonColor: '#1abc9c'
+        });
+        return;
+    }
     document.getElementById('statusMessage').innerText = "🔍 Finding...";
 
     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
@@ -299,7 +360,14 @@ function getLocation() {
             document.getElementById('latitude').value = p.coords.latitude;
             document.getElementById('longitude').value = p.coords.longitude;
         });
-    } else { alert("Geolocation not supported."); }
+    } else { 
+        Swal.fire({
+            icon: 'error',
+            title: 'Geolocation Not Supported',
+            text: 'Your browser does not support location services.',
+            confirmButtonColor: '#1abc9c'
+        });
+    }
 }
 
 function upvoteReport(docId, issueType, btn) {

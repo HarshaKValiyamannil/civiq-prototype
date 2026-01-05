@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="CSS/bootstrap.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             padding-top: 56px;
@@ -153,6 +154,53 @@
             margin-right: 8px;
             color: #2c3e50;
         }
+        
+        /* Glassmorphism Card Effect */
+        .card {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* Gradient Submit Button */
+        #submitBtn {
+            background: linear-gradient(135deg, #1abc9c, #3498db);
+            border: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        #submitBtn:hover {
+            background: linear-gradient(135deg, #17a689, #2980b9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
+        }
+        
+        /* Adjust card header for glass effect */
+        .card-header {
+            background: rgba(44, 62, 80, 0.25) !important;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: white;
+        }
+        
+        /* Adjust form card specifically */
+        .form-card {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        /* Adjust map card specifically */
+        .map-card {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
     </style>
 </head>
 <body>
@@ -280,9 +328,8 @@
                             </div>
                             <div class="col-md-6">
                                 <select id="sentimentFilter" class="form-select" onchange="filterReports()">
-                                    <option value="All">All Priority</option>
-                                    <option value="negative">Urgent Only</option>
-                                    <option value="positive">Positive Only</option>
+                                    <option value="All">All Reports</option>
+                                    <option value="negative">⚠️ Urgent / Safety Hazard</option>
                                 </select>
                             </div>
                         </div>

@@ -282,6 +282,14 @@ function renderReportList(reports) {
         
         // Sentiment Badge (Simplified)
         let sentimentBadge = `<span class="badge bg-secondary">${report.status || 'Open'}</span>`;
+        
+        // Urgent Indicator (Only for negative sentiment)
+        const displaySentiment = getSentimentText(report);
+        let sentimentIndicator = "";
+        
+        if (displaySentiment.toLowerCase().trim() === "negative") {
+            sentimentIndicator = `<span class="badge bg-warning ms-2" style="opacity: 0.8; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">urgent</span>`;
+        }
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
@@ -311,7 +319,7 @@ function renderReportList(reports) {
                 <img src="${report.imageUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:4px;" onerror="this.src='https://via.placeholder.com/80'">
                 <div style="width: 100%;">
                     <div class="d-flex justify-content-between">
-                        <h5 class="mb-1 text-primary">${report.issueType}</h5>
+                        <h5 class="mb-1 text-primary">${report.issueType} ${sentimentIndicator}</h5>
                         <small class="text-muted">${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
                     </div>
                     <p class="mb-1 small">${report.description}</p>

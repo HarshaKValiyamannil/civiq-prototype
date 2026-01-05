@@ -102,6 +102,7 @@ function submitNewAsset() {
     const description = document.getElementById('description').value;
     const lat = document.getElementById('latitude').value;
     const long = document.getElementById('longitude').value;
+    const email = document.getElementById('userEmail').value; // Get the email
     const fileInput = document.getElementById('imageFile');
 
     if (!lat || !long) {
@@ -137,7 +138,9 @@ function submitNewAsset() {
             "latitude": lat,
             "longitude": long,
             "photoContent": rawBase64, 
-            "fileName": file.name
+            "fileName": file.name,
+            "userEmail": email, // <--- ADD THIS
+            "status": "Open"    // <--- FORCE STATUS TO OPEN
         };
 
         fetch(SUBMIT_URL, {
@@ -294,6 +297,17 @@ function renderReportList(reports) {
                 <span class="vote-badge">${report.votes || 0}</span>
             </button>`;
 
+        // Resolution Button (only show for reports with email)
+        let resolveButton = "";
+        if (report.userEmail) {
+            resolveButton = `
+                <button class="btn btn-success btn-sm mt-3 d-flex align-items-center gap-2" 
+                        onclick="resolveIssue('${report.id}')">
+                    <i class="fas fa-check"></i>
+                    <span>Resolve Issue</span>
+                </button>`;
+        }
+
         const card = document.createElement('div');
         card.className = "report-card mb-3";
         card.innerHTML = `
@@ -306,7 +320,10 @@ function renderReportList(reports) {
                     </h5>
                     <p class="report-description mb-0">${report.description}</p>
                     ${aiDisplay}
-                    ${voteButton}
+                    <div class="d-flex gap-2 flex-wrap">
+                        ${voteButton}
+                        ${resolveButton}
+                    </div>
                 </div>
             </div>`;
         
@@ -477,4 +494,91 @@ function showLoggedInState(username) {
 function showLoggedOutState() {
     document.getElementById('loginButtonSection').style.display = 'block';
     document.getElementById('userProfileSection').style.display = 'none';
+}
+
+// ==========================================
+// 10. RESOLUTION FUNCTION
+// ==========================================
+
+function resolveIssue(reportId) {
+    // 1. Find the full report object from our global 'allReports' list
+    const report = allReports.find(r => r.id === reportId);
+    
+    if (!report) return;
+    if (!report.userEmail) {
+        Swal.fire("Error", "This report has no email attached.", "error");
+        return;
+    }
+
+    // 2. Create a copy of the report and set status to Resolved
+    const updatedReport = { ...report, status: "Resolved" };
+
+    // 3. Send the WHOLE updated report to Logic App
+    // (The Logic App will just overwrite the database with this new data)
+    fetch("YOUR_NEW_LOGIC_APP_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedReport)
+    }).then(() => {
+        Swal.fire("Success", "Issue resolved & User notified!", "success");
+        loadReports(); // Refresh the list to show the change
+    });
+}
+
+// ==========================================
+// 10. RESOLUTION FUNCTION
+// ==========================================
+
+function resolveIssue(reportId) {
+    // 1. Find the full report object from our global 'allReports' list
+    const report = allReports.find(r => r.id === reportId);
+    
+    if (!report) return;
+    if (!report.userEmail) {
+        Swal.fire("Error", "This report has no email attached.", "error");
+        return;
+    }
+
+    // 2. Create a copy of the report and set status to Resolved
+    const updatedReport = { ...report, status: "Resolved" };
+
+    // 3. Send the WHOLE updated report to Logic App
+    // (The Logic App will just overwrite the database with this new data)
+    fetch("YOUR_NEW_LOGIC_APP_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedReport)
+    }).then(() => {
+        Swal.fire("Success", "Issue resolved & User notified!", "success");
+        loadReports(); // Refresh the list to show the change
+    });
+}
+
+// ==========================================
+// 10. RESOLUTION FUNCTION
+// ==========================================
+
+function resolveIssue(reportId) {
+    // 1. Find the full report object from our global 'allReports' list
+    const report = allReports.find(r => r.id === reportId);
+    
+    if (!report) return;
+    if (!report.userEmail) {
+        Swal.fire("Error", "This report has no email attached.", "error");
+        return;
+    }
+
+    // 2. Create a copy of the report and set status to Resolved
+    const updatedReport = { ...report, status: "Resolved" };
+
+    // 3. Send the WHOLE updated report to Logic App
+    // (The Logic App will just overwrite the database with this new data)
+    fetch("YOUR_NEW_LOGIC_APP_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedReport)
+    }).then(() => {
+        Swal.fire("Success", "Issue resolved & User notified!", "success");
+        loadReports(); // Refresh the list to show the change
+    });
 }

@@ -256,11 +256,15 @@ function filterReports() {
 }
 
 // ==========================================
-// 6. RENDER LIST (The Fix for Badges)
+// 6. RENDER LIST (With Admin Powers)
 // ==========================================
 function renderReportList(reports) {
     const listDiv = document.getElementById('reportsList');
     listDiv.innerHTML = "";
+
+    // 1. Check if the current user is the Admin
+    const currentUser = localStorage.getItem("civiq_user");
+    const isAdmin = (currentUser && currentUser.toLowerCase() === "admin");
 
     if (reports.length === 0) {
         listDiv.innerHTML = "<p>No reports match filters.</p>";
@@ -268,62 +272,52 @@ function renderReportList(reports) {
     }
 
     reports.forEach(report => {
-        // Enhanced AI Insight Display
-        let aiDisplay = "";
-        if (report.aiCaption) {
-            aiDisplay = `
-                <div class="ai-insight-box">
+        // AI Tag Logic (Simplified for brevity, keep your full version)
+        let aiDisplay = report.aiCaption ? `<div class="ai-insight-box">
                     <div class="ai-insight-title">
                         <i class="fas fa-search me-1"></i> AI Insight
                     </div>
                     <div class="ai-insight-content">"${report.aiCaption}"</div>
+                </div>` : "";
+        
+        // Sentiment Badge (Simplified)
+        let sentimentBadge = `<span class="badge bg-secondary">${report.status || 'Open'}</span>`;
+
+        // 2. ADMIN ONLY BUTTON
+        let adminControls = "";
+        
+        // If user is Admin AND report is not yet resolved
+        if (isAdmin && report.status !== "Resolved") {
+            adminControls = `
+                <button class="btn btn-success btn-sm w-100 mt-2" 
+                    onclick="resolveIssue('${report.id}')">
+                    <i class="fas fa-check-circle"></i> Mark as Resolved
+                </button>`;
+        } 
+        // If report is already resolved, show a label instead
+        else if (report.status === "Resolved") {
+            adminControls = `
+                <div class="mt-2 text-center text-success border border-success rounded p-1" style="font-size: 0.8rem; background: #d4edda;">
+                    <i class="fas fa-check"></i> Resolved
                 </div>`;
         }
 
-        // Urgent Indicator (Only for negative sentiment)
-        const displaySentiment = getSentimentText(report);
-        let sentimentIndicator = "";
-        
-        if (displaySentiment.toLowerCase().trim() === "negative") {
-            sentimentIndicator = `<span class="badge-urgent ms-2">urgent</span>`;
-        }
-
-        // Enhanced Support Button
-        const voteButton = `
-            <button class="btn-support mt-3 d-flex align-items-center gap-2" 
-                    onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
-                <i class="fas fa-thumbs-up"></i>
-                <span>Support</span>
-                <span class="vote-badge">${report.votes || 0}</span>
-            </button>`;
-
-        // Resolution Button (only show for reports with email)
-        let resolveButton = "";
-        if (report.userEmail) {
-            resolveButton = `
-                <button class="btn btn-success btn-sm mt-3 d-flex align-items-center gap-2" 
-                        onclick="resolveIssue('${report.id}')">
-                    <i class="fas fa-check"></i>
-                    <span>Resolve Issue</span>
-                </button>`;
-        }
-
         const card = document.createElement('div');
-        card.className = "report-card mb-3";
+        card.className = "card mb-3 shadow-sm";
+        card.style = "padding: 10px; background: white; border: 1px solid #ddd;";
+        
         card.innerHTML = `
-            <div class="d-flex gap-3 p-3">
-                <img src="${report.imageUrl}" class="report-image" onerror="this.src='https://via.placeholder.com/80'">
-                <div class="flex-grow-1">
-                    <h5 class="report-title d-flex align-items-center flex-wrap">
-                        ${report.issueType}
-                        ${sentimentIndicator}
-                    </h5>
-                    <p class="report-description mb-0">${report.description}</p>
-                    ${aiDisplay}
-                    <div class="d-flex gap-2 flex-wrap">
-                        ${voteButton}
-                        ${resolveButton}
+            <div class="d-flex gap-3">
+                <img src="${report.imageUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:4px;" onerror="this.src='https://via.placeholder.com/80'">
+                <div style="width: 100%;">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="mb-1 text-primary">${report.issueType}</h5>
+                        <small class="text-muted">${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
                     </div>
+                    <p class="mb-1 small">${report.description}</p>
+                    ${sentimentBadge}
+                    ${aiDisplay}
+                    ${adminControls} 
                 </div>
             </div>`;
         
@@ -497,88 +491,50 @@ function showLoggedOutState() {
 }
 
 // ==========================================
-// 10. RESOLUTION FUNCTION
+// 7. RESOLVE ISSUE FUNCTION (Connects to Logic App)
 // ==========================================
+const RESOLVE_LOGIC_APP_URL = "https://prod-48.uksouth.logic.azure.com:443/workflows/0c79cb04ff5041268730879e18d0ac5b/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=XBIxgmIdZ5mNawFYR0flWgOayY1UP6BvJGfMBXzpXZ0";
 
 function resolveIssue(reportId) {
-    // 1. Find the full report object from our global 'allReports' list
+    // 1. Find the report in memory
     const report = allReports.find(r => r.id === reportId);
-    
     if (!report) return;
-    if (!report.userEmail) {
-        Swal.fire("Error", "This report has no email attached.", "error");
-        return;
-    }
 
-    // 2. Create a copy of the report and set status to Resolved
-    const updatedReport = { ...report, status: "Resolved" };
+    // 2. Confirm with the Admin
+    Swal.fire({
+        title: 'Mark as Resolved?',
+        text: "This will update the database and email the citizen.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        confirmButtonText: 'Yes, Resolve it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            // 3. Show Loading
+            Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
 
-    // 3. Send the WHOLE updated report to Logic App
-    // (The Logic App will just overwrite the database with this new data)
-    fetch("YOUR_NEW_LOGIC_APP_URL", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedReport)
-    }).then(() => {
-        Swal.fire("Success", "Issue resolved & User notified!", "success");
-        loadReports(); // Refresh the list to show the change
-    });
-}
+            // 4. Create "Resolved" version of the report
+            const updatedReport = { ...report, status: "Resolved" };
 
-// ==========================================
-// 10. RESOLUTION FUNCTION
-// ==========================================
-
-function resolveIssue(reportId) {
-    // 1. Find the full report object from our global 'allReports' list
-    const report = allReports.find(r => r.id === reportId);
-    
-    if (!report) return;
-    if (!report.userEmail) {
-        Swal.fire("Error", "This report has no email attached.", "error");
-        return;
-    }
-
-    // 2. Create a copy of the report and set status to Resolved
-    const updatedReport = { ...report, status: "Resolved" };
-
-    // 3. Send the WHOLE updated report to Logic App
-    // (The Logic App will just overwrite the database with this new data)
-    fetch("YOUR_NEW_LOGIC_APP_URL", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedReport)
-    }).then(() => {
-        Swal.fire("Success", "Issue resolved & User notified!", "success");
-        loadReports(); // Refresh the list to show the change
-    });
-}
-
-// ==========================================
-// 10. RESOLUTION FUNCTION
-// ==========================================
-
-function resolveIssue(reportId) {
-    // 1. Find the full report object from our global 'allReports' list
-    const report = allReports.find(r => r.id === reportId);
-    
-    if (!report) return;
-    if (!report.userEmail) {
-        Swal.fire("Error", "This report has no email attached.", "error");
-        return;
-    }
-
-    // 2. Create a copy of the report and set status to Resolved
-    const updatedReport = { ...report, status: "Resolved" };
-
-    // 3. Send the WHOLE updated report to Logic App
-    // (The Logic App will just overwrite the database with this new data)
-    fetch("YOUR_NEW_LOGIC_APP_URL", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedReport)
-    }).then(() => {
-        Swal.fire("Success", "Issue resolved & User notified!", "success");
-        loadReports(); // Refresh the list to show the change
+            // 5. Send to Cloud
+            fetch(RESOLVE_LOGIC_APP_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedReport)
+            })
+            .then(response => {
+                if(response.ok) {
+                    Swal.fire("Resolved!", "Citizen notified via Outlook.", "success");
+                    loadReports(); // Refresh list to show green "Resolved" label
+                } else {
+                    throw new Error("Logic App failed");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire("Error", "Could not connect to cloud.", "error");
+            });
+        }
     });
 }

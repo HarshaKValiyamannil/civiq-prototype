@@ -245,11 +245,13 @@ function loadReports() {
 // 5. FILTER REPORTS (The Fix for "Urgent")
 // ==========================================
 function filterReports() {
+    currentPage = 1; // Reset to page 1 when filter changes
+    
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
     const statusFilter = document.getElementById('statusFilter').value; // <-- NEW
     
-    console.log(`🚀 Filtering: Type=${typeFilter}, Sentiment=${sentimentFilter}, Status=${statusFilter}`);
+    console.log(`🚀 Filtering: Type=\${typeFilter}, Sentiment=\${sentimentFilter}, Status=\${statusFilter}`);
 
     let filteredReports = allReports.filter(report => {
         // 1. Filter Type
@@ -268,7 +270,7 @@ function filterReports() {
             const cleanFilter = sentimentFilter.toLowerCase().trim();
             
             // Debug log to confirm it works
-            // console.log(`Comparing: '${cleanValue}' vs '${cleanFilter}'`);
+            // console.log(`Comparing: '\${cleanValue}' vs '\${cleanFilter}'`);
             
             return cleanValue === cleanFilter;
         }
@@ -284,32 +286,41 @@ function filterReports() {
 // 6. RENDER LIST (With Admin Powers)
 // ==========================================
 function renderReportList(reports) {
+    // 1. Save the full list of matches so we can paginate them
+    currentFilteredData = reports;
+    
+    // 2. Calculate the slice for the current page
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageItems = reports.slice(startIndex, endIndex);
+
     const listDiv = document.getElementById('reportsList');
     listDiv.innerHTML = "";
 
-    // 1. Check if the current user is the Admin
-    const currentUser = localStorage.getItem("civiq_user");
-    const isAdmin = (currentUser && currentUser.toLowerCase() === "admin");
-
     if (reports.length === 0) {
-        listDiv.innerHTML = "<p>No reports match filters.</p>";
+        listDiv.innerHTML = "<p class='p-3'>No reports match filters.</p>";
+        document.getElementById('paginationControls').innerHTML = ""; // Hide buttons
         return;
     }
 
-    reports.forEach(report => {
+    // 3. Render only the "Page Items"
+    const user = localStorage.getItem("civiq_user");
+    const isAdmin = (user && user.toLowerCase() === "admin");
+
+    pageItems.forEach(report => {
         // AI Tag Logic
         let aiDisplay = report.aiCaption ? `<div class="ai-insight-box">
                     <div class="ai-insight-title">
                         <i class="fas fa-search"></i>
                         <span>AI Insight</span>
                     </div>
-                    <div class="ai-insight-content">"${report.aiCaption}"</div>
+                    <div class="ai-insight-content">"\${report.aiCaption}"</div>
                 </div>` : "";
         
         // Status Badge with consistent styling
         const reportStatus = report.status || 'Open';
         const statusClass = reportStatus === 'Resolved' ? 'status-resolved' : 'status-open';
-        let statusBadge = `<span class="status-badge ${statusClass}">${reportStatus}</span>`;
+        let statusBadge = `<span class="status-badge \${statusClass}">\${reportStatus}</span>`;
         
         // Urgent Indicator (Only for negative sentiment)
         const displaySentiment = getSentimentText(report);
@@ -322,10 +333,10 @@ function renderReportList(reports) {
         // Support/Upvote Button
         const voteButton = `
             <button class="btn btn-outline-primary btn-sm mt-2" 
-                    onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
+                    onclick="upvoteReport('\${report.id}', '\${report.issueType}', this)">
                 <i class="fas fa-arrow-up"></i> Support
             </button>
-            <span class="vote-badge ms-2">${report.votes || 0} <i class="fas fa-arrow-up"></i></span>`;
+            <span class="vote-badge ms-2">\${report.votes || 0} <i class="fas fa-arrow-up"></i></span>`;
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
@@ -334,7 +345,7 @@ function renderReportList(reports) {
         if (isAdmin && report.status !== "Resolved") {
             adminControls = `
                 <button class="btn btn-success btn-sm w-100 mt-2" 
-                    onclick="resolveIssue('${report.id}')">
+                    onclick="resolveIssue('\${report.id}')">
                     <i class="fas fa-check-circle"></i> Mark as Resolved
                 </button>`;
         } 
@@ -346,36 +357,33 @@ function renderReportList(reports) {
                 </div>`;
         }
 
-        const card = document.createElement('div');
-        card.className = "card report-card mb-3";
+        const cardCol = document.createElement('div');
+        cardCol.className = "col-md-6 col-lg-4 mb-4"; // Creates a 3-column grid
         
-        card.innerHTML = `
-            <div class="card-body">
-                <div class="d-flex gap-3">
-                    <img src="${report.imageUrl}" class="report-image" onerror="this.src='https://via.placeholder.com/100'">
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="report-title mb-0">
-                                ${report.issueType}
-                                ${sentimentIndicator}
-                            </h5>
-                            <small class="text-muted" style="white-space: nowrap;">${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
-                        </div>
-                        <p class="report-description mb-2">${report.description}</p>
-                        <div class="mb-2">
-                            ${statusBadge}
-                        </div>
-                        ${aiDisplay}
-                        <div class="d-flex gap-2 align-items-center">
-                            ${voteButton}
-                        </div>
-                        ${adminControls}
+        // Card content with grid layout
+        cardCol.innerHTML = `
+            <div class="card h-100 report-card">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="report-title mb-0">\${report.issueType}</h5>
+                        <small class="text-muted" style="white-space: nowrap;">\${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
+                    </div>
+                    <div class="mb-2">\${statusBadge}</div>
+                    <p class="report-description mb-2 flex-grow-1">\${report.description}</p>
+                    <div class="mb-2">\${sentimentIndicator}</div>
+                    <div class="mb-2">\${aiDisplay}</div>
+                    <div class="mt-auto">
+                        <div class="d-flex gap-2 align-items-center">\${voteButton}</div>
+                        \${adminControls}
                     </div>
                 </div>
-            </div>`;
-        
-        listDiv.appendChild(card);
+            </div>
+        `;
+        listDiv.appendChild(cardCol);
     });
+
+    // 4. Render the Page Buttons (1, 2, 3...)
+    renderPaginationControls(reports.length);
 }
 
 // ==========================================
@@ -402,14 +410,14 @@ function initMap(reports) {
             
             // Create marker with appropriate color
             const customIcon = new L.Icon({
-                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-\${color}.png`,
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                 iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
             });
 
             L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
-                .bindPopup(`<b>${report.issueType}</b><br>Status: ${report.status || 'Open'}<br>${report.description}<br><img src="${report.imageUrl}" style="max-width:150px;" onerror="this.style.display='none'">`);
+                .bindPopup(`<b>\${report.issueType}</b><br>Status: \${report.status || 'Open'}<br>\${report.description}<br><img src="\${report.imageUrl}" style="max-width:150px;" onerror="this.style.display='none'">`);
         }
     });
 }
@@ -430,7 +438,7 @@ function searchAddress() {
     }
     document.getElementById('statusMessage').innerText = "🔍 Finding...";
 
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(address)}`)
     .then(r => r.json())
     .then(data => {
         if (data.length > 0) {
@@ -473,7 +481,7 @@ function upvoteReport(docId, issueType, btn) {
             // Find the vote badge next to this button and update it
             const voteBadge = btn.nextElementSibling;
             if (voteBadge && voteBadge.classList.contains('vote-badge')) {
-                voteBadge.innerHTML = `${data.newVoteCount} <i class="fas fa-arrow-up"></i>`;
+                voteBadge.innerHTML = `\${data.newVoteCount} <i class="fas fa-arrow-up"></i>`;
             }
         }
     })
@@ -610,4 +618,62 @@ function resolveIssue(reportId) {
             });
         }
     });
+}
+
+// ==========================================
+// 10. PAGINATION LOGIC (Add to app.js)
+// ==========================================
+
+let currentPage = 1;
+const itemsPerPage = 6; // How many cards per page?
+let currentFilteredData = []; // Store filtered data here
+
+function renderPaginationControls(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const paginationDiv = document.getElementById('paginationControls');
+    paginationDiv.innerHTML = "";
+
+    if (totalPages <= 1) return; // No buttons needed if only 1 page
+
+    // Previous Button
+    paginationDiv.innerHTML += `
+        <li class="page-item \${currentPage === 1 ? 'disabled' : ''}">
+            <button class="page-link" onclick="changePage(\${currentPage - 1})">Previous</button>
+        </li>`;
+
+    // Numbered Buttons
+    for (let i = 1; i <= totalPages; i++) {
+        paginationDiv.innerHTML += `
+            <li class="page-item \${i === currentPage ? 'active' : ''}">
+                <button class="page-link" onclick="changePage(\${i})">\${i}</button>
+            </li>`;
+    }
+
+    // Next Button
+    paginationDiv.innerHTML += `
+        <li class="page-item \${currentPage === totalPages ? 'disabled' : ''}">
+            <button class="page-link" onclick="changePage(\${currentPage + 1})">Next</button>
+        </li>`;
+}
+
+function changePage(newPage) {
+    if (newPage < 1 || newPage > Math.ceil(currentFilteredData.length / itemsPerPage)) {
+        return; // Don't allow invalid page numbers
+    }
+    
+    currentPage = newPage;
+    // Re-render using the GLOBAL filtered data (not fetching again)
+    // We call renderReportList but pass the SAME data back to it
+    // Wait... calling renderReportList again would reset currentFilteredData.
+    // Better way: Split the Logic. But for now, just recursively calling it works if we trust the global.
+    
+    // Actually, simpler fix: Just re-run render with the stored data
+    // But we need to update the startIndex logic. 
+    // Let's rely on the fact that 'currentFilteredData' is already stored?
+    // No, renderReportList accepts an argument.
+    
+    renderReportList(currentFilteredData); 
+    
+    // Scroll to top of list so user sees new items
+    document.getElementById('reportsList').scrollIntoView({ behavior: 'smooth' });
 }

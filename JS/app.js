@@ -337,7 +337,7 @@ function renderReportList(reports) {
         }
 
         // Support/Upvote Button
-        const voteButton = '<button class="btn btn-outline-primary btn-sm mt-2" onclick="upvoteReport(\'' + report.id + '\', \'' + report.issueType + '\', this)"><i class="fas fa-arrow-up"></i> Support</button><span class="vote-badge ms-2">' + (report.votes || 0) + ' <i class="fas fa-arrow-up"></i></span>';
+        const voteButton = '<div class="d-flex align-items-center gap-2"><span class="badge bg-light text-dark border rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-arrow-up text-primary me-1"></i>' + (report.votes || 0) + ' upvotes</span><button class="btn btn-outline-primary btn-sm" onclick="upvoteReport(\'' + report.id + '\', \'' + report.issueType + '\', this)"><i class="fas fa-thumbs-up"></i> Support</button></div>';
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
@@ -400,10 +400,11 @@ function initMap(reports) {
             }
             
             // Create marker with appropriate color
-            const customIcon = new L.Icon({
+            const customIcon = L.icon({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-\${color}.png`,
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34]
             });
 
             L.marker([report.location.lat, report.location.lon], {icon: customIcon})
@@ -689,24 +690,15 @@ function renderPaginationControls(totalItems) {
     if (totalPages <= 1) return; // No buttons needed if only 1 page
 
     // Previous Button
-    paginationDiv.innerHTML += `
-        <li class="page-item \${currentPage === 1 ? 'disabled' : ''}">
-            <button class="page-link" onclick="changePage(\${currentPage - 1})">Previous</button>
-        </li>`;
+    paginationDiv.innerHTML += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '"><button class="page-link" onclick="changePage(' + (currentPage - 1) + ')">Previous</button></li>';
 
     // Numbered Buttons
     for (let i = 1; i <= totalPages; i++) {
-        paginationDiv.innerHTML += `
-            <li class="page-item \${i === currentPage ? 'active' : ''}">
-                <button class="page-link" onclick="changePage(\${i})">\${i}</button>
-            </li>`;
+        paginationDiv.innerHTML += '<li class="page-item ' + (i === currentPage ? 'active' : '') + '"><button class="page-link" onclick="changePage(' + i + ')">' + i + '</button></li>';
     }
 
     // Next Button
-    paginationDiv.innerHTML += `
-        <li class="page-item \${currentPage === totalPages ? 'disabled' : ''}">
-            <button class="page-link" onclick="changePage(\${currentPage + 1})">Next</button>
-        </li>`;
+    paginationDiv.innerHTML += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '"><button class="page-link" onclick="changePage(' + (currentPage + 1) + ')">Next</button></li>';
 }
 
 function changePage(newPage) {

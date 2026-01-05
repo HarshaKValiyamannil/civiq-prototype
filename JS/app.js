@@ -5,6 +5,11 @@
 let map; // Global variable for the map
 var allReports = []; // 'var' makes this accessible to the console for debugging!
 
+// Pagination variables
+let currentPage = 1;
+const itemsPerPage = 6; // How many cards per page?
+let currentFilteredData = []; // Store filtered data here
+
 // ==========================================
 // CONFIGURATION: YOUR LOGIC APP URLS
 // ==========================================
@@ -362,22 +367,19 @@ function renderReportList(reports) {
         
         // Card content with grid layout
         cardCol.innerHTML = `
-            <div class="card h-100 report-card">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="report-title mb-0">\${report.issueType}</h5>
-                        <small class="text-muted" style="white-space: nowrap;">\${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
-                    </div>
-                    <div class="mb-2">\${statusBadge}</div>
-                    <p class="report-description mb-2 flex-grow-1">\${report.description}</p>
-                    <div class="mb-2">\${sentimentIndicator}</div>
-                    <div class="mb-2">\${aiDisplay}</div>
-                    <div class="mt-auto">
-                        <div class="d-flex gap-2 align-items-center">\${voteButton}</div>
-                        \${adminControls}
-                    </div>
-                </div>
+          <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between">
+                 <h5>\${report.issueType}</h5>
+                 <small>\${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
+              </div>
+              <p>\${report.description}</p>
+              <div class="mt-auto">
+                 \${voteButton}
+                 \${adminControls}
+              </div>
             </div>
+          </div>
         `;
         listDiv.appendChild(cardCol);
     });
@@ -623,10 +625,6 @@ function resolveIssue(reportId) {
 // ==========================================
 // 10. PAGINATION LOGIC (Add to app.js)
 // ==========================================
-
-let currentPage = 1;
-const itemsPerPage = 6; // How many cards per page?
-let currentFilteredData = []; // Store filtered data here
 
 function renderPaginationControls(totalItems) {
     const totalPages = Math.ceil(totalItems / itemsPerPage);

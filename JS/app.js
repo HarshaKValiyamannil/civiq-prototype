@@ -140,29 +140,62 @@ function loadReports() {
 function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
-    
+
+    console.log("Filters:", typeFilter, sentimentFilter); // Debug Log 1
+
     let filteredReports = allReports.filter(report => {
-        // Match Type
-        const typeMatch = (typeFilter === 'All' || report.issueType === typeFilter);
-        
-        // Match Sentiment (Handling potential object or string)
-        let reportSentiment = "";
-        if (typeof report.sentiment === 'string') {
-            reportSentiment = report.sentiment;
-        } else if (report.sentiment && report.sentiment.sentiment) {
-            reportSentiment = report.sentiment.sentiment; // Handle Azure AI Object
+        // --- 1. Filter by Type ---
+        if (typeFilter !== 'All' && report.issueType !== typeFilter) {
+            return false;
         }
-        
-        const cleanSentiment = reportSentiment.toLowerCase().trim();
-        const cleanFilter = sentimentFilter.toLowerCase().trim();
-        const sentimentMatch = (sentimentFilter === 'All' || cleanSentiment === cleanFilter);
-        
-        return typeMatch && sentimentMatch;
+
+        // --- 2. Filter by Sentiment (The Fix) ---
+        if (sentimentFilter !== 'All') {
+            // Safety Check: If report has no sentiment, hide it
+            if (!report.sentiment) return false;
+
+            // INTELLIGENT UNWRAPPING:
+            // Check if sentiment is an object (like Azure sends) or just text
+            let sentimentValue = "";
+            
+            if (typeof report.sentiment === 'object') {
+                // It's an object, so we grab the property inside
+                // Note: Check your console to see if it's .sentiment or .label or .prediction
+                sentimentValue = report.sentiment.sentiment || report.sentiment.label || ""; 
+            } else {
+                // It's just a string (e.g. "negative")
+                sentimentValue = report.sentiment.toString();
+            }
+
+            // Clean it up (lowercase, no spaces)
+            const cleanReportSentiment = sentimentValue.toLowerCase().trim();
+            const cleanFilter = sentimentFilter.toLowerCase().trim();
+
+            // Debug Log 2: See exactly what is being compared
+            console.log(`Comparing DB value: '${cleanReportSentiment}' vs Filter: '${cleanFilter}'`);
+
+            if (cleanReportSentiment !== cleanFilter) {
+                return false;
+            }
+        }
+
+        return true; // If we passed both checks, show the report!
     });
 
-    // Refresh Map and List
+    // 3. Update the Map and List
+    console.log(`Found ${filteredReports.length} matches.`);
+    
+    // Clear old map markers
+    if (map) {
+        map.remove(); // Remove the map entirely to prevent "already initialized" errors
+        map = null;   // Reset variable
+    }
+    
+    // Redraw everything
     initMap(filteredReports);
-    renderReportList(filteredReports); // Moved list logic to a helper for cleaner code
+    
+    // Ideally, you should also have a function to redraw the list here
+    // renderReportsList(filteredReports); 
 }
 
 // Helper function to render report list
@@ -329,21 +362,16 @@ function getLocation() {
 // ==========================================
 
 function initMap(reports) {
-    // 1. COMPLETELY clear the old map instance and its container
-    if (map != undefined || map != null) {
-        map.remove();
-    }
-
-    // 2. Initialize the map
+    // 1. Initialize the map
     map = L.map('mapArea').setView([54.5973, -5.9301], 12);
 
-    // 3. Add the Tile Layer
+    // 2. Add the Tile Layer
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // 4. Add markers
+    // 3. Add markers
     reports.forEach(report => {
         if (report.location && report.location.lat && report.location.lon) {
             // Add small random jitter to prevent marker overlap

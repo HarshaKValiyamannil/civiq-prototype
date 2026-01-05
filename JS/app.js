@@ -103,6 +103,22 @@ $(document).ready(function () {
 // ==========================================
 function submitNewAsset() {
     console.log("Submit button clicked!"); 
+    
+    // 1. SPAM CHECK: Rate Limiting (60 seconds)
+    const lastSubmitTime = localStorage.getItem("civiq_last_submit");
+    const now = new Date().getTime();
+    const cooldown = 60000; // 60,000ms = 1 Minute
+
+    if (lastSubmitTime && (now - lastSubmitTime < cooldown)) {
+        const secondsLeft = Math.ceil((cooldown - (now - lastSubmitTime)) / 1000);
+        Swal.fire({
+            icon: 'info',
+            title: 'Please Wait',
+            text: `You can submit another report in \${secondsLeft} seconds.`,
+            confirmButtonColor: '#3498db'
+        });
+        return; // STOP HERE. Do not send to cloud.
+    }
 
     const issueType = document.getElementById('issueType').value;
     const description = document.getElementById('description').value;
@@ -148,57 +164,55 @@ function submitNewAsset() {
             "userEmail": email, // <--- ADD THIS
             "status": "Open"    // <--- FORCE STATUS TO OPEN
         };
+        
+        // AND... Don't forget to SAVE the time when they successfully submit!
+        // Add this line right before the fetch() call:
+        localStorage.setItem("civiq_last_submit", now);
 
         fetch(SUBMIT_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         })
-        .then(response => {
+        .then(async response => { // Mark function as async to read body
             if (response.ok) {
-                // Clear the status message after success
+                // SUCCESS CASE (200 OK)
                 document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
-                setTimeout(() => {
-                    document.getElementById('statusMessage').innerText = '';
-                }, 3000);
-                
                 Swal.fire({
                     icon: 'success',
                     title: 'Report Submitted!',
-                    text: 'Your report has been successfully submitted.',
-                    confirmButtonColor: '#1abc9c'
+                    text: 'Thank you for your contribution.',
+                    timer: 2000
                 }).then(() => {
-                    setTimeout(loadReports, 2000); 
+                    loadReports(); 
+                    // Optional: Clear form
+                    document.getElementById('description').value = "";
+                    document.getElementById('imageFile').value = "";
                 });
+
+            } else if (response.status === 409) {
+                // DUPLICATE CASE (409 Conflict) - NEW!
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-circle text-warning"></i> Duplicate!';
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Reported',
+                    text: 'A report with this description and email already exists. We are working on it!',
+                    confirmButtonColor: '#f39c12'
+                });
+
             } else {
-                // Clear the status message after error
-                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Error!';
-                setTimeout(() => {
-                    document.getElementById('statusMessage').innerText = '';
-                }, 3000);
-                
+                // GENERIC ERROR (500, 400, etc.)
+                document.getElementById('statusMessage').innerText = "Error!";
                 Swal.fire({
                     icon: 'error',
-                    title: 'Submission Error',
-                    text: 'There was an error submitting your report.',
-                    confirmButtonColor: '#1abc9c'
+                    title: 'Submission Failed',
+                    text: 'Something went wrong connecting to the cloud.',
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            // Clear the status message after error
-            document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Network Error!';
-            setTimeout(() => {
-                document.getElementById('statusMessage').innerText = '';
-            }, 3000);
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Network Error',
-                text: 'Please check your connection and try again.',
-                confirmButtonColor: '#1abc9c'
-            });
+            Swal.fire('Network Error', 'Please check your internet connection.', 'error');
         });
     };
 }
@@ -594,7 +608,7 @@ function openReportModal(reportId) {
 
         // Setup Delete Button
         document.getElementById('btnModalDelete').onclick = function() {
-            deleteReport(report.id);
+            deleteReport(report.id, report.issueType);
         };
     } else {
         adminSection.style.display = 'none';
@@ -604,7 +618,7 @@ function openReportModal(reportId) {
     new bootstrap.Modal(document.getElementById('reportModal')).show();
 }
 
-function deleteReport(reportId) {
+function deleteReport(reportId, issueType) {
     Swal.fire({
         title: 'Are you sure?',
         text: "You won\'t be able to revert this!",
@@ -616,10 +630,14 @@ function deleteReport(reportId) {
         if (result.isConfirmed) {
             Swal.fire({ title: 'Deleting...', didOpen: () => Swal.showLoading() });
 
+            // Update the delete call to send issueType
             fetch(DELETE_LOGIC_APP_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ "id": reportId })
+                body: JSON.stringify({ 
+                    "id": reportId, 
+                    "issueType": issueType // <--- ADD THIS
+                })
             })
             .then(() => {
                 Swal.fire("Deleted!", "Report has been removed.", "success");

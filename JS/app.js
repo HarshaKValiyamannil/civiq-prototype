@@ -17,22 +17,25 @@ const VIEW_URL = "https://prod-14.uksouth.logic.azure.com:443/workflows/1f435b6d
 // 1. HELPER FUNCTIONS (The "Brains")
 // ==========================================
 
-// Helper: Render skeleton loader while data loads
+// Helper: Render enhanced skeleton loader
 function renderSkeletonLoader() {
     const skeletonCards = [];
     for (let i = 0; i < 3; i++) {
         skeletonCards.push(`
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body" style="padding: 10px; background: white; border: 1px solid #ddd;">
-                    <div class="d-flex gap-3">
-                        <div class="bg-light" style="width:80px; height:80px; border-radius:4px;"></div>
-                        <div style="flex: 1;">
-                            <h5 class="mb-1 bg-light placeholder-glow" style="height: 20px; border-radius: 4px;"><span class="placeholder col-6"></span></h5>
-                            <p class="mb-1 small bg-light placeholder-glow" style="height: 15px; border-radius: 4px;"><span class="placeholder col-8"></span></p>
-                            <p class="mb-1 small bg-light placeholder-glow" style="height: 15px; width: 60%; border-radius: 4px;"><span class="placeholder col-4"></span></p>
-                            <div class="mt-2">
-                                <span class="btn btn-sm btn-outline-secondary placeholder" style="width: 60px; height: 25px;"></span>
-                            </div>
+            <div class="report-card mb-3">
+                <div class="d-flex gap-3 p-3">
+                    <div class="bg-light placeholder-glow" style="width:80px; height:80px; border-radius:8px;"></div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-2">
+                            <span class="bg-light placeholder-glow" style="width: 120px; height: 22px; border-radius: 4px; display: inline-block;"></span>
+                        </h5>
+                        <p class="mb-3">
+                            <span class="bg-light placeholder-glow" style="width: 100%; height: 16px; border-radius: 3px; display: inline-block; margin-bottom: 8px;"></span>
+                            <span class="bg-light placeholder-glow" style="width: 70%; height: 16px; border-radius: 3px; display: inline-block;"></span>
+                        </p>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="bg-light placeholder-glow" style="width: 80px; height: 30px; border-radius: 15px;"></span>
+                            <span class="bg-light placeholder-glow" style="width: 25px; height: 20px; border-radius: 10px;"></span>
                         </div>
                     </div>
                 </div>
@@ -262,50 +265,46 @@ function renderReportList(reports) {
     }
 
     reports.forEach(report => {
-        // AI Tag Logic
+        // Enhanced AI Insight Display
         let aiDisplay = "";
         if (report.aiCaption) {
-            // NEW: Clean "Insight" Box
             aiDisplay = `
-                <div class="mt-2 p-2 bg-light rounded border-start border-4 border-info">
-                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">
-                        <i class="fas fa-robot me-1"></i> AI Analysis
-                    </small>
-                    <div class="small text-dark mt-1">"${report.aiCaption}"</div>
+                <div class="ai-insight-box">
+                    <div class="ai-insight-title">
+                        <i class="fas fa-search me-1"></i> AI Insight
+                    </div>
+                    <div class="ai-insight-content">"${report.aiCaption}"</div>
                 </div>`;
         }
 
-        // Sentiment Badge Logic (Using Helper)
+        // Urgent Indicator (Only for negative sentiment)
         const displaySentiment = getSentimentText(report);
-        let sentimentBadge = "";
+        let sentimentIndicator = "";
         
-        if (displaySentiment) {
-            let badgeColor = "secondary";
-            const s = displaySentiment.toLowerCase().trim();
-            if (s === "negative") badgeColor = "danger";
-            if (s === "positive") badgeColor = "success";
-            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${displaySentiment.toUpperCase()}</span>`;
+        if (displaySentiment.toLowerCase().trim() === "negative") {
+            sentimentIndicator = `<span class="badge-urgent ms-2">urgent</span>`;
         }
 
-        // NEW: Professional "Support" Button
+        // Enhanced Support Button
         const voteButton = `
-            <button class="btn btn-sm btn-outline-primary mt-3 d-flex align-items-center gap-2" 
+            <button class="btn-support mt-3 d-flex align-items-center gap-2" 
                     onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
-                <i class="fas fa-arrow-up"></i> 
+                <i class="fas fa-thumbs-up"></i>
                 <span>Support</span>
-                <span class="badge bg-primary text-white rounded-pill">${report.votes || 0}</span>
+                <span class="vote-badge">${report.votes || 0}</span>
             </button>`;
 
         const card = document.createElement('div');
-        card.className = "card mb-3 shadow-sm";
-        card.style = "padding: 10px; background: white; border: 1px solid #ddd;";
+        card.className = "report-card mb-3";
         card.innerHTML = `
-            <div class="d-flex gap-3">
-                <img src="${report.imageUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:4px;" onerror="this.src='https://via.placeholder.com/80'">
-                <div>
-                    <h5 class="mb-1 text-primary">${report.issueType}</h5>
-                    <p class="mb-1 small">${report.description}</p>
-                    ${sentimentBadge}
+            <div class="d-flex gap-3 p-3">
+                <img src="${report.imageUrl}" class="report-image" onerror="this.src='https://via.placeholder.com/80'">
+                <div class="flex-grow-1">
+                    <h5 class="report-title d-flex align-items-center flex-wrap">
+                        ${report.issueType}
+                        ${sentimentIndicator}
+                    </h5>
+                    <p class="report-description mb-0">${report.description}</p>
                     ${aiDisplay}
                     ${voteButton}
                 </div>
@@ -325,7 +324,9 @@ function initMap(reports) {
     reports.forEach(report => {
         if (report.location && report.location.lat) {
             const sentimentText = getSentimentText(report);
-            const color = getMarkerColor(sentimentText);
+            
+            // Only use red markers for negative sentiment, blue for all others
+            const color = sentimentText.toLowerCase().trim() === 'negative' ? 'red' : 'blue';
             
             const customIcon = new L.Icon({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,

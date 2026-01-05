@@ -16,6 +16,7 @@ let currentFilteredData = []; // Store filtered data here
 const SUBMIT_URL = "https://prod-34.uksouth.logic.azure.com:443/workflows/efe13b1eabd84a6ca949d9b687ba91d1/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=5T8mNlaNJshHKK7v91oBo7XEE5nYeZdnnHWgkTFV8tU"; 
 const UPVOTE_URL = "https://prod-53.uksouth.logic.azure.com:443/workflows/cebfee1bfef44cce9895fb17933e863e/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=F8JlsLHiYQMC4qocqIH95cr-b8JhPSWy_EVvZOOhir8";
 const VIEW_URL = "https://prod-14.uksouth.logic.azure.com:443/workflows/1f435b6dbd6e454192fc835d9c38ec93/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=Xq_1QkvdDjxsSzJVFqUBJWyaEeh-qN_DpbfRwaO03Vw"; 
+const DELETE_LOGIC_APP_URL = "https://prod-34.uksouth.logic.azure.com:443/workflows/833b2c4259df4fcf8139c38c6eec5920/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=F-C235Mq2bqlW6M7inlZ7EjOu4gcxVzBmCHfBfvXhIc";
 
 
 // ==========================================
@@ -336,30 +337,18 @@ function renderReportList(reports) {
         }
 
         // Support/Upvote Button
-        const voteButton = `
-            <button class="btn btn-outline-primary btn-sm mt-2" 
-                    onclick="upvoteReport('\${report.id}', '\${report.issueType}', this)">
-                <i class="fas fa-arrow-up"></i> Support
-            </button>
-            <span class="vote-badge ms-2">\${report.votes || 0} <i class="fas fa-arrow-up"></i></span>`;
+        const voteButton = '<button class="btn btn-outline-primary btn-sm mt-2" onclick="upvoteReport(\'' + report.id + '\', \'' + report.issueType + '\', this)"><i class="fas fa-arrow-up"></i> Support</button><span class="vote-badge ms-2">' + (report.votes || 0) + ' <i class="fas fa-arrow-up"></i></span>';
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
         
         // If user is Admin AND report is not yet resolved
         if (isAdmin && report.status !== "Resolved") {
-            adminControls = `
-                <button class="btn btn-success btn-sm w-100 mt-2" 
-                    onclick="resolveIssue('\${report.id}')">
-                    <i class="fas fa-check-circle"></i> Mark as Resolved
-                </button>`;
+            adminControls = '<button class="btn btn-success btn-sm w-100 mt-2" onclick="resolveIssue(\'' + report.id + '\')"><i class="fas fa-check-circle"></i> Mark as Resolved</button>';
         } 
         // If report is already resolved, show a label instead
         else if (report.status === "Resolved") {
-            adminControls = `
-                <div class="mt-2 text-center text-success border border-success rounded p-1" style="font-size: 0.8rem; background: #d4edda;">
-                    <i class="fas fa-check"></i> Resolved
-                </div>`;
+            adminControls = '<div class="mt-2 text-center text-success border border-success rounded p-1" style="font-size: 0.8rem; background: #d4edda;"><i class="fas fa-check"></i> Resolved</div>';
         }
 
         const cardCol = document.createElement('div');
@@ -367,10 +356,11 @@ function renderReportList(reports) {
         
         // Build HTML content with proper variable substitution using string concatenation
         cardCol.innerHTML = 
-            '<div class="card h-100 shadow-sm">' +
+            '<div class="card h-100 shadow-sm" style="cursor: pointer;">' +
+            '<img src="' + report.imageUrl + '" class="card-img-top" style="cursor: pointer; height: 200px; object-fit: cover;" onclick="openReportModal(\'' + report.id + '\')" onerror="this.style.display=\'none\'">' +
             '<div class="card-body d-flex flex-column">' +
             '<div class="d-flex justify-content-between">' +
-            '<h5>' + report.issueType + '</h5>' +
+            '<h5 style="cursor: pointer; display: flex; align-items: center;" onclick="openReportModal(\'' + report.id + '\')">' + report.issueType + (displaySentiment.toLowerCase().trim() === "negative" ? ' <span class="badge-urgent ms-2">urgent</span>' : '') + '</h5>' +
             '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
             '</div>' +
             '<p>' + report.description + '</p>' +
@@ -562,6 +552,72 @@ function showLoggedInState(username) {
 function showLoggedOutState() {
     document.getElementById('loginButtonSection').style.display = 'block';
     document.getElementById('userProfileSection').style.display = 'none';
+}
+
+function openReportModal(reportId) {
+    const report = allReports.find(r => r.id === reportId);
+    if (!report) return;
+
+    // 1. Populate Modal Data
+    document.getElementById('modalImage').src = report.imageUrl;
+    document.getElementById('modalType').innerText = report.issueType;
+    document.getElementById('modalDesc').innerText = report.description;
+    document.getElementById('modalLocation').innerText = `${report.location.lat}, ${report.location.lon}`;
+    
+    const statusSpan = document.getElementById('modalStatus');
+    statusSpan.innerText = report.status || 'Open';
+    statusSpan.className = report.status === 'Resolved' ? 'badge bg-success' : 'badge bg-primary';
+
+    // 2. Check Admin Rights
+    const user = localStorage.getItem("civiq_user");
+    const isAdmin = (user && user.toLowerCase() === "admin");
+    const adminSection = document.getElementById('modalAdminSection');
+
+    if (isAdmin) {
+        adminSection.style.display = 'block';
+        
+        // Setup Resolve Button
+        document.getElementById('btnModalResolve').onclick = function() {
+            resolveIssue(report.id); // Call your existing function
+            bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+        };
+
+        // Setup Delete Button
+        document.getElementById('btnModalDelete').onclick = function() {
+            deleteReport(report.id);
+        };
+    } else {
+        adminSection.style.display = 'none';
+    }
+
+    // 3. Show Modal
+    new bootstrap.Modal(document.getElementById('reportModal')).show();
+}
+
+function deleteReport(reportId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won\'t be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Deleting...', didOpen: () => Swal.showLoading() });
+
+            fetch(DELETE_LOGIC_APP_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "id": reportId })
+            })
+            .then(() => {
+                Swal.fire("Deleted!", "Report has been removed.", "success");
+                bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+                loadReports(); // Refresh the grid
+            });
+        }
+    });
 }
 
 // ==========================================

@@ -132,7 +132,7 @@ function submitNewAsset() {
 }
 
 // ==========================================
-// 3. VIEW REPORTS LOGIC
+// 3. VIEW REPORTS LOGIC (UPDATED)
 // ==========================================
 function loadReports() {
     console.log("🔄 Loading reports...");
@@ -145,15 +145,20 @@ function loadReports() {
         console.log("📦 Data received:", data);
         listDiv.innerHTML = ""; 
         
-        const items = data.Documents || data; 
+        // --- THE FIX IS HERE ---
+        // Look for Capital 'Documents', lowercase 'documents', 'value', or just use the data itself
+        const items = data.Documents || data.documents || data.value || data; 
 
-        if (!items || items.length === 0) {
-            listDiv.innerHTML = "<p>No reports found.</p>";
+        // Safety check: Ensure 'items' is actually an Array (list)
+        if (!Array.isArray(items) || items.length === 0) {
+            console.error("❌ Could not find a list of reports in the data:", data);
+            listDiv.innerHTML = "<p>No reports found (Data Format Issue).</p>";
             return;
         }
 
-        // Store all reports for filtering
+        // Store the correct list into the global variable
         allReports = items;
+        console.log(`✅ Successfully loaded ${allReports.length} reports into memory.`);
 
         // Apply filters and display
         filterReports();

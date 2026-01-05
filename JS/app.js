@@ -124,7 +124,7 @@ function submitNewAsset() {
         return;
     }
 
-    document.getElementById('statusMessage').innerText = "⏳ Submitting...";
+    document.getElementById('statusMessage').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
     const file = fileInput.files[0];
     const reader = new FileReader();
@@ -150,6 +150,12 @@ function submitNewAsset() {
         })
         .then(response => {
             if (response.ok) {
+                // Clear the status message after success
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
+                setTimeout(() => {
+                    document.getElementById('statusMessage').innerText = '';
+                }, 3000);
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Report Submitted!',
@@ -159,6 +165,12 @@ function submitNewAsset() {
                     setTimeout(loadReports, 2000); 
                 });
             } else {
+                // Clear the status message after error
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Error!';
+                setTimeout(() => {
+                    document.getElementById('statusMessage').innerText = '';
+                }, 3000);
+                
                 Swal.fire({
                     icon: 'error',
                     title: 'Submission Error',
@@ -169,6 +181,12 @@ function submitNewAsset() {
         })
         .catch(error => {
             console.error('Error:', error);
+            // Clear the status message after error
+            document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Network Error!';
+            setTimeout(() => {
+                document.getElementById('statusMessage').innerText = '';
+            }, 3000);
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Network Error',
@@ -303,12 +321,11 @@ function renderReportList(reports) {
 
         // Support/Upvote Button
         const voteButton = `
-            <button class="btn btn-outline-primary btn-sm mt-2 d-flex align-items-center gap-2" 
+            <button class="btn btn-outline-primary btn-sm mt-2" 
                     onclick="upvoteReport('${report.id}', '${report.issueType}', this)">
-                <i class="fas fa-arrow-up"></i>
-                <span>Support</span>
-                <span class="badge bg-primary text-white rounded-pill">${report.votes || 0}</span>
-            </button>`;
+                <i class="fas fa-arrow-up"></i> Support
+            </button>
+            <span class="vote-badge ms-2">${report.votes || 0} <i class="fas fa-arrow-up"></i></span>`;
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
@@ -444,7 +461,6 @@ function getLocation() {
 }
 
 function upvoteReport(docId, issueType, btn) {
-    const countSpan = btn; 
     btn.disabled = true;
     fetch(UPVOTE_URL, {
         method: 'POST',
@@ -454,7 +470,11 @@ function upvoteReport(docId, issueType, btn) {
     .then(r => r.json())
     .then(data => {
         if (data.newVoteCount) {
-            btn.textContent = `👍 ${data.newVoteCount}`;
+            // Find the vote badge next to this button and update it
+            const voteBadge = btn.nextElementSibling;
+            if (voteBadge && voteBadge.classList.contains('vote-badge')) {
+                voteBadge.innerHTML = `${data.newVoteCount} <i class="fas fa-arrow-up"></i>`;
+            }
         }
     })
     .catch(err => {

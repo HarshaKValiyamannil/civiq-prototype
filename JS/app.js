@@ -137,65 +137,57 @@ function loadReports() {
 // ==========================================
 // 7. FILTER LOGIC
 // ==========================================
+// 1. Updated filterReports (Uses 'sentiments')
 function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
-
-    console.log("Filters:", typeFilter, sentimentFilter); // Debug Log 1
+    
+    // Debug to prove the new code is running
+    console.log("🚀 Running NEW filter logic...");
 
     let filteredReports = allReports.filter(report => {
-        // --- 1. Filter by Type ---
+        // --- Filter by Type ---
         if (typeFilter !== 'All' && report.issueType !== typeFilter) {
             return false;
         }
 
-        // --- 2. Filter by Sentiment (The Fix) ---
+        // --- Filter by Sentiment ---
         if (sentimentFilter !== 'All') {
-            // Safety Check: If report has no sentiment, hide it
-            if (!report.sentiment) return false;
+            // FIX: Use 'sentiments' (plural) as seen in your console
+            const rawSentiment = report.sentiments || report.sentiment; 
 
-            // INTELLIGENT UNWRAPPING:
-            // Check if sentiment is an object (like Azure sends) or just text
-            let sentimentValue = "";
-            
-            if (typeof report.sentiment === 'object') {
-                // It's an object, so we grab the property inside
-                // Note: Check your console to see if it's .sentiment or .label or .prediction
-                sentimentValue = report.sentiment.sentiment || report.sentiment.label || ""; 
+            if (!rawSentiment) return false; // If missing, hide it
+
+            // UNWRAP: Handle if it's an object OR a string
+            let sentimentText = "";
+            if (typeof rawSentiment === 'object') {
+                // Try common Azure fields
+                sentimentText = rawSentiment.sentiment || rawSentiment.label || JSON.stringify(rawSentiment);
             } else {
-                // It's just a string (e.g. "negative")
-                sentimentValue = report.sentiment.toString();
+                sentimentText = rawSentiment.toString();
             }
 
-            // Clean it up (lowercase, no spaces)
-            const cleanReportSentiment = sentimentValue.toLowerCase().trim();
+            // Clean up strings for comparison
+            const cleanValue = sentimentText.toLowerCase().trim();
             const cleanFilter = sentimentFilter.toLowerCase().trim();
-
-            // Debug Log 2: See exactly what is being compared
-            console.log(`Comparing DB value: '${cleanReportSentiment}' vs Filter: '${cleanFilter}'`);
-
-            if (cleanReportSentiment !== cleanFilter) {
-                return false;
+            
+            // Log matches to help debugging
+            if (cleanValue === cleanFilter) {
+                console.log(`✅ Match found: ${cleanValue}`);
             }
+
+            return cleanValue === cleanFilter;
         }
 
-        return true; // If we passed both checks, show the report!
+        return true;
     });
 
-    // 3. Update the Map and List
-    console.log(`Found ${filteredReports.length} matches.`);
-    
-    // Clear old map markers
+    // Refresh Map
     if (map) {
-        map.remove(); // Remove the map entirely to prevent "already initialized" errors
-        map = null;   // Reset variable
+        map.remove();
+        map = null;
     }
-    
-    // Redraw everything
     initMap(filteredReports);
-    
-    // Ideally, you should also have a function to redraw the list here
-    // renderReportsList(filteredReports); 
 }
 
 // Helper function to render report list
@@ -361,46 +353,37 @@ function getLocation() {
 
 // ==========================================
 
+// 2. Updated initMap (Ensures colors work with 'sentiments')
 function initMap(reports) {
-    // 1. Initialize the map
     map = L.map('mapArea').setView([54.5973, -5.9301], 12);
-
-    // 2. Add the Tile Layer
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
+        maxZoom: 19, attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // 3. Add markers
     reports.forEach(report => {
         if (report.location && report.location.lat && report.location.lon) {
-            // Add small random jitter to prevent marker overlap
-            let lat = parseFloat(report.location.lat);
-            let lon = parseFloat(report.location.lon);
             
-            // Add tiny random offset to prevent perfect overlaps
-            const jitter = 0.0005; // Very small offset
-            lat += (Math.random() - 0.5) * jitter;
-            lon += (Math.random() - 0.5) * jitter;
+            // FIX: Pass the plural 'sentiments' to get the right color
+            const rawSentiment = report.sentiments || report.sentiment;
             
-            const color = getMarkerColor(report.sentiment);
+            // Quick logic to extract string for color check
+            let sentimentText = "";
+            if (typeof rawSentiment === 'object') {
+                sentimentText = rawSentiment.sentiment || "neutral";
+            } else {
+                sentimentText = rawSentiment || "neutral";
+            }
+
+            const color = getMarkerColor(sentimentText);
+
             const customIcon = new L.Icon({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
             });
 
-            const popupContent = `
-                <b>${report.issueType}</b><br>
-                Status: ${report.status || 'New'}<br>
-                ${report.description || ''}<br>
-                <img src="${report.imageUrl}" width="100" style="margin-top:5px;" onerror="this.style.display='none'">
-            `;
-
-            L.marker([lat, lon], {icon: customIcon})
+            const popupContent = `<b>${report.issueType}</b><br>${report.description}`;
+            L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
                 .bindPopup(popupContent);
         }

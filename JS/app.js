@@ -365,22 +365,21 @@ function renderReportList(reports) {
         const cardCol = document.createElement('div');
         cardCol.className = "col-md-6 col-lg-4 mb-4"; // Creates a 3-column grid
         
-        // Card content with grid layout
-        cardCol.innerHTML = `
-          <div class="card h-100 shadow-sm">
-            <div class="card-body d-flex flex-column">
-              <div class="d-flex justify-content-between">
-                 <h5>\${report.issueType}</h5>
-                 <small>\${report.timestamp ? new Date(report.timestamp).toLocaleDateString() : ''}</small>
-              </div>
-              <p>\${report.description}</p>
-              <div class="mt-auto">
-                 \${voteButton}
-                 \${adminControls}
-              </div>
-            </div>
-          </div>
-        `;
+        // Build HTML content with proper variable substitution using string concatenation
+        cardCol.innerHTML = 
+            '<div class="card h-100 shadow-sm">' +
+            '<div class="card-body d-flex flex-column">' +
+            '<div class="d-flex justify-content-between">' +
+            '<h5>' + report.issueType + '</h5>' +
+            '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
+            '</div>' +
+            '<p>' + report.description + '</p>' +
+            '<div class="mt-auto">' +
+            '<div class="d-flex gap-2 align-items-center">' + voteButton + '</div>' +
+            adminControls +
+            '</div>' +
+            '</div>' +
+            '</div>';
         listDiv.appendChild(cardCol);
     });
 

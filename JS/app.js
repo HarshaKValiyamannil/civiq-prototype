@@ -364,6 +364,7 @@ function renderReportList(reports) {
             '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
             '</div>' +
             '<p>' + report.description + '</p>' +
+            (report.aiCaption ? '<div class="ai-insight-box mb-2"><div class="ai-insight-title"><i class="fas fa-search"></i><span>AI Insight</span></div><div class="ai-insight-content">"' + report.aiCaption + '"</div></div>' : '') +
             '<div class="mt-auto">' +
             '<div class="d-flex gap-2 align-items-center">' + voteButton + '</div>' +
             adminControls +
@@ -399,17 +400,18 @@ function initMap(reports) {
                 color = 'blue'; // 🔵 NORMAL: Blue for positive/neutral open issues
             }
             
-            // Create marker with appropriate color
-            const customIcon = L.icon({
-                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-\${color}.png`,
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34]
+            // Create marker with appropriate color using standard Leaflet div icons
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: ' + color + '; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">' + (color === 'red' ? '⚠' : color === 'grey' ? '✓' : '•') + '</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -12]
             });
 
             L.marker([report.location.lat, report.location.lon], {icon: customIcon})
                 .addTo(map)
-                .bindPopup(`<b>\${report.issueType}</b><br>Status: \${report.status || 'Open'}<br>\${report.description}<br><img src="\${report.imageUrl}" style="max-width:150px;" onerror="this.style.display='none'">`);
+                .bindPopup('<b>' + report.issueType + '</b><br>Status: ' + (report.status || 'Open') + '<br>' + report.description + '<br><img src="' + report.imageUrl + '" style="max-width:150px;" onerror="this.style.display=\'none\'">');
         }
     });
 }

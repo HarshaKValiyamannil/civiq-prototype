@@ -123,7 +123,7 @@ function submitNewAsset() {
 }
 
 // ==========================================
-// 4. LOAD REPORTS (The Fix for "Empty Data")
+// 3. VIEW REPORTS LOGIC (Robust Version)
 // ==========================================
 function loadReports() {
     console.log("🔄 Loading reports...");
@@ -133,21 +133,29 @@ function loadReports() {
     fetch(VIEW_URL)
     .then(response => response.json())
     .then(data => {
-        console.log("📦 Raw Data received:", data);
+        console.log("📦 Data received:", data);
+        listDiv.innerHTML = ""; 
         
-        // ROBUST CHECK: Look for Capital 'Documents', lowercase 'documents', or just the data
+        // CHECK ALL CASINGS: Capital 'Documents', lowercase 'documents', 'value', or root array
         const items = data.Documents || data.documents || data.value || data; 
 
-        if (!Array.isArray(items) || items.length === 0) {
-            console.warn("❌ No list found in data.");
+        // CRITICAL SAFETY CHECK: Ensure we actually have a LIST (Array)
+        if (!Array.isArray(items)) {
+            console.error("❌ Data format error. Expected a list but got:", items);
+            listDiv.innerHTML = "<p>Error: Could not read reports list.</p>";
+            return;
+        }
+
+        if (items.length === 0) {
             listDiv.innerHTML = "<p>No reports found.</p>";
             return;
         }
 
-        // Save to global variable
+        // Store to global variable
         allReports = items;
-        console.log(`✅ Loaded ${allReports.length} reports into memory.`);
+        console.log(`✅ Loaded ${allReports.length} reports.`);
 
+        // Apply filters
         filterReports();
     })
     .catch(error => {

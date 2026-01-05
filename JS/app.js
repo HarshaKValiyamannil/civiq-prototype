@@ -137,13 +137,12 @@ function loadReports() {
 // ==========================================
 // 7. FILTER LOGIC
 // ==========================================
-// 1. Updated filterReports (Uses 'sentiments')
+// 1. Updated filterReports (Now draws the list!)
 function filterReports() {
     const typeFilter = document.getElementById('typeFilter').value;
     const sentimentFilter = document.getElementById('sentimentFilter').value;
     
-    // Debug to prove the new code is running
-    console.log("🚀 Running NEW filter logic...");
+    console.log("🚀 Filtering reports...");
 
     let filteredReports = allReports.filter(report => {
         // --- Filter by Type ---
@@ -153,44 +152,39 @@ function filterReports() {
 
         // --- Filter by Sentiment ---
         if (sentimentFilter !== 'All') {
-            // FIX: Use 'sentiments' (plural) as seen in your console
+            // Check both singular AND plural fields
             const rawSentiment = report.sentiments || report.sentiment; 
 
-            if (!rawSentiment) return false; // If missing, hide it
+            if (!rawSentiment) return false; 
 
-            // UNWRAP: Handle if it's an object OR a string
+            // Handle object vs string
             let sentimentText = "";
             if (typeof rawSentiment === 'object') {
-                // Try common Azure fields
                 sentimentText = rawSentiment.sentiment || rawSentiment.label || JSON.stringify(rawSentiment);
             } else {
                 sentimentText = rawSentiment.toString();
             }
 
-            // Clean up strings for comparison
             const cleanValue = sentimentText.toLowerCase().trim();
             const cleanFilter = sentimentFilter.toLowerCase().trim();
             
-            // Log matches to help debugging
-            if (cleanValue === cleanFilter) {
-                console.log(`✅ Match found: ${cleanValue}`);
-            }
-
             return cleanValue === cleanFilter;
         }
-
         return true;
     });
 
-    // Refresh Map
+    // 1. Refresh Map
     if (map) {
         map.remove();
         map = null;
     }
     initMap(filteredReports);
+
+    // 2. Refresh List (THIS WAS MISSING!)
+    renderReportList(filteredReports);
 }
 
-// Helper function to render report list
+// 2. Updated renderReportList (Fixes badges to check 'sentiments')
 function renderReportList(reports) {
     const listDiv = document.getElementById('reportsList');
     listDiv.innerHTML = "";
@@ -205,76 +199,61 @@ function renderReportList(reports) {
         card.className = "card mb-3 shadow-sm";
         card.style = "border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;";
         
-        // --- SMART TAG CLEANER ---
+        // --- AI Tag Logic ---
         let aiDisplay = "";
         if (report.aiCaption) {
             let tagsString = "No tags";
-            
             try {
-                // Case 1: It's already a clean list (Array)
                 if (Array.isArray(report.aiTags)) {
-                    // Check if it's a list of objects [{name:"cat"}] or text ["cat"]
-                    if (typeof report.aiTags[0] === 'object') {
-                        tagsString = report.aiTags.map(t => t.name).join(", ");
-                    } else {
-                        tagsString = report.aiTags.join(", ");
-                    }
-                } 
-                // Case 2: It is a String (Text)
-                else if (typeof report.aiTags === 'string') {
-                    // Check if it looks like JSON code (starts with [)
+                    tagsString = (typeof report.aiTags[0] === 'object') ? 
+                        report.aiTags.map(t => t.name).join(", ") : report.aiTags.join(", ");
+                } else if (typeof report.aiTags === 'string') {
                     if (report.aiTags.trim().startsWith("[")) {
-                        const parsed = JSON.parse(report.aiTags);
-                        tagsString = parsed.map(t => t.name).join(", ");
+                        tagsString = JSON.parse(report.aiTags).map(t => t.name).join(", ");
                     } else {
-                        tagsString = report.aiTags; // It's just normal text
+                        tagsString = report.aiTags;
                     }
                 }
-            } catch (e) {
-                console.error("Error parsing tags:", e);
-                tagsString = "Tags available but could not format.";
-            }
+            } catch (e) { tagsString = "Tags available."; }
 
             aiDisplay = `
                 <div style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #17a2b8; border-radius: 4px;">
-                    <small style="color: #17a2b8; font-weight: bold;">🤖 Azure AI Analysis:</small><br>
+                    <small style="color: #17a2b8; font-weight: bold;">🤖 AI Analysis:</small><br>
                     <i style="color: #555;">"${report.aiCaption}"</i><br>
                     <small class="text-muted">Tags: ${tagsString}</small>
-                </div>
-            `;
+                </div>`;
         }
-        // --------------------------------
 
-        // Calculate current votes (default to 0 if missing)
+        // --- Sentiment Badge Logic (Updated for 'sentiments') ---
+        let sentimentBadge = "";
+        
+        // Check plural first, then singular
+        const rawSentiment = report.sentiments || report.sentiment;
+        let displaySentiment = "";
+
+        if (typeof rawSentiment === 'string') {
+            displaySentiment = rawSentiment;
+        } else if (rawSentiment && rawSentiment.sentiment) {
+            displaySentiment = rawSentiment.sentiment;
+        }
+
+        if (displaySentiment) {
+            let badgeColor = "secondary";
+            const s = displaySentiment.toLowerCase().trim();
+            if (s === "negative") badgeColor = "danger";
+            if (s === "positive") badgeColor = "success";
+            
+            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${displaySentiment.toUpperCase()}</span>`;
+        }
+
+        // Vote Button Logic
         const votes = report.votes || 0;
-
-        // Create the button HTML
         const voteButton = `
             <button class="btn btn-sm btn-outline-primary" 
                     onclick="upvoteReport('${report.id}', '${report.issueType}', this)" 
                     style="margin-top: 10px;">
                 👍 <span class="vote-count">${votes}</span>
-            </button>
-        `;
-
-        // --- NEW: Sentiment Badge Logic ---
-        let sentimentBadge = "";
-        let displaySentiment = "";
-        if (typeof report.sentiment === 'string') {
-            displaySentiment = report.sentiment;
-        } else if (report.sentiment && report.sentiment.sentiment) {
-            displaySentiment = report.sentiment.sentiment; // Handle Azure AI Object
-        }
-
-        if (displaySentiment) {
-            let badgeColor = "secondary"; // Default (Gray)
-            if (displaySentiment === "negative") badgeColor = "danger"; // Red for Urgent
-            if (displaySentiment === "positive") badgeColor = "success"; // Green for Good
-            
-            // Create the badge HTML
-            sentimentBadge = `<span class="badge bg-${badgeColor}" style="margin-left: 5px;">${displaySentiment.toUpperCase()}</span>`;
-        }
-        // ----------------------------------
+            </button>`;
 
         card.innerHTML = `
             <div style="display:flex; gap: 15px; align-items: start;">
@@ -287,16 +266,13 @@ function renderReportList(reports) {
                     <p style="margin: 0 0 5px 0;">${report.description || 'No description'}</p>
                     <small class="text-muted">📍 ${report.location?.lat || '?'}, ${report.location?.lon || '?'}</small>
                     <br>
-                    
                     <span class="badge bg-secondary" style="font-size: 0.8em; margin-top: 5px; display:inline-block;">${report.status || 'New'}</span>
-                    
                     ${sentimentBadge}
-
                     ${aiDisplay}
                     ${voteButton}
                 </div>
-            </div>
-        `;
+            </div>`;
+        
         listDiv.appendChild(card);
     });
 }

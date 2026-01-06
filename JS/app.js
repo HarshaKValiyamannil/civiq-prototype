@@ -286,14 +286,20 @@ function loadReports() {
 }
 
 // ==========================================
-// 5. FILTER REPORTS (The Fix for "Urgent")
+// 5. FILTER REPORTS (FIXED)
 // ==========================================
 function filterReports() {
-    currentPage = 1; // Reset to page 1 when filter changes
+    currentPage = 1; 
     
-    const typeFilter = document.getElementById('typeFilter').value;
-    const sentimentFilter = document.getElementById('sentimentFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value; // <-- NEW
+    // SAFE ELEMENTS FETCHING
+    const typeEl = document.getElementById('typeFilter');
+    const statusEl = document.getElementById('statusFilter');
+    const sentimentEl = document.getElementById('sentimentFilter'); // This is missing in your HTML
+
+    // If element exists, get value. If not, default to 'All'
+    const typeFilter = typeEl ? typeEl.value : 'All';
+    const statusFilter = statusEl ? statusEl.value : 'All';
+    const sentimentFilter = sentimentEl ? sentimentEl.value : 'All'; 
     
     console.log(`🚀 Filtering: Type=\${typeFilter}, Sentiment=\${sentimentFilter}, Status=\${statusFilter}`);
 

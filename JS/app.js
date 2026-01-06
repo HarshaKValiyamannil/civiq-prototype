@@ -1151,3 +1151,70 @@ function searchReportsCloud() {
         listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
     });
 }
+
+// ==========================================
+// 14. AZURE SPEECH TO TEXT (Cloud AI)
+// ==========================================
+function startAzureDictation() {
+    // 1. CONFIGURATION
+    // Load configuration from external file (excluded from git)
+    
+    // Check if config is available
+    if (typeof CIVIQ_CONFIG === 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Configuration Missing',
+            text: 'Please create JS/config.js with your Azure Speech key',
+            confirmButtonColor: '#3498db'
+        });
+        return;
+    }
+    
+    const AZURE_SPEECH_KEY = CIVIQ_CONFIG.AZURE_SPEECH_KEY;
+    const AZURE_REGION = CIVIQ_CONFIG.AZURE_SPEECH_REGION;
+    
+    const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
+        AZURE_SPEECH_KEY,
+        AZURE_REGION
+    );
+    
+    speechConfig.speechRecognitionLanguage = "en-GB"; // British English
+
+    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+    // 2. UI UPDATES
+    const micStatus = document.getElementById('micStatus');
+    const descBox = document.getElementById('description');
+    
+    micStatus.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> Connecting to Azure...</span>';
+    
+    // 3. START RECOGNITION (RecognizeOnceAsync is best for short commands)
+    recognizer.recognizeOnceAsync(
+        function (result) {
+            // Success Callback
+            if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                console.log("Azure heard:", result.text);
+                
+                // Append text logic
+                if (descBox.value.length > 0) {
+                    descBox.value += ' ' + result.text;
+                } else {
+                    descBox.value = result.text;
+                }
+                
+                micStatus.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Processed by Azure</span>';
+            } else {
+                micStatus.innerText = "Azure couldn't hear you clearly.";
+            }
+
+            recognizer.close();
+        },
+        function (err) {
+            // Error Callback
+            console.error(err);
+            micStatus.innerHTML = '<span class="text-danger">Error connecting to Azure Speech.</span>';
+            recognizer.close();
+        }
+    );
+}

@@ -3,7 +3,8 @@
 // ==========================================
 
 // NEW: Application Insights tracking
-let appInsights = window.appInsights; 
+// Using appInsights variable already defined in index.html
+
 
 let map; // Global variable for the map
 var allReports = []; // 'var' makes this accessible to the console for debugging!
@@ -104,8 +105,8 @@ $(document).ready(function () {
     console.log("🚀 CiviQ App Loaded!"); 
     
     // NEW: Track the page view
-    if (appInsights) {
-        appInsights.trackPageView({ name: "HomePage" });
+    if (window.appInsights) {
+        window.appInsights.trackPageView({ name: "HomePage" });
     }
     
     $("#submitBtn").click(submitNewAsset);
@@ -204,8 +205,8 @@ function submitNewAsset() {
                 document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
                 
                 // --- NEW: LOGICALLY CONNECTED MONITORING ---
-                if (appInsights) {
-                    appInsights.trackEvent({
+                if (window.appInsights) {
+                    window.appInsights.trackEvent({
                         name: "ReportSubmitted",
                         properties: { 
                             issueType: issueType,      // e.g., "Pothole"
@@ -260,8 +261,8 @@ function submitNewAsset() {
             console.error('Error:', error);
             
             // --- NEW: TRACK EXCEPTION ---
-            if (appInsights) {
-                appInsights.trackException({ exception: error });
+            if (window.appInsights) {
+                window.appInsights.trackException({ exception: error });
             }
             // ----------------------------
             
@@ -538,8 +539,8 @@ function upvoteReport(docId, issueType, btn) {
     btn.disabled = true;
     
     // Track the upvote event
-    if (appInsights) {
-        appInsights.trackEvent({
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
             name: "ReportUpvoted",
             properties: { 
                 issueType: issueType,
@@ -567,8 +568,8 @@ function upvoteReport(docId, issueType, btn) {
         console.error("Upvote error:", err);
         
         // Track the error
-        if (appInsights) {
-            appInsights.trackException({ exception: err });
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: err });
         }
         
         btn.disabled = false;
@@ -701,8 +702,8 @@ function deleteReport(reportId, issueType) {
     console.log("Attempting delete:", reportId, issueType); // Debugging line
     
     // Track the delete event
-    if (appInsights) {
-        appInsights.trackEvent({
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
             name: "ReportDeleted",
             properties: { 
                 issueType: issueType,
@@ -747,8 +748,8 @@ function deleteReport(reportId, issueType) {
                 console.error(err);
                 
                 // Track the error
-                if (appInsights) {
-                    appInsights.trackException({ exception: err });
+                if (window.appInsights) {
+                    window.appInsights.trackException({ exception: err });
                 }
                 
                 Swal.fire("Error", "Could not delete. Check console for details.", "error");
@@ -768,8 +769,8 @@ function resolveIssue(reportId) {
     if (!report) return;
     
     // Track the resolve event
-    if (appInsights) {
-        appInsights.trackEvent({
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
             name: "ReportResolved",
             properties: { 
                 issueType: report.issueType,
@@ -821,8 +822,8 @@ function resolveIssue(reportId) {
                 console.error(err);
                 
                 // Track the error
-                if (appInsights) {
-                    appInsights.trackException({ exception: err });
+                if (window.appInsights) {
+                    window.appInsights.trackException({ exception: err });
                 }
                 
                 Swal.fire("Error", "Could not connect to cloud.", "error");
@@ -982,8 +983,8 @@ function renderCharts(tLabels, tValues, sLabels, sValues) {
 // ==========================================
 function showAnalytics() {
     // Track the analytics view event
-    if (appInsights) {
-        appInsights.trackEvent({
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
             name: "AnalyticsViewed"
         });
     }
@@ -1024,8 +1025,8 @@ function showAnalytics() {
         console.error("Analytics Error:", err);
         
         // Track the error
-        if (appInsights) {
-            appInsights.trackException({ exception: err });
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: err });
         }
         
         Swal.fire("Error", "Could not fetch stats from cloud.", "error");
@@ -1088,8 +1089,8 @@ function searchReportsCloud() {
     }
     
     // Track the search event
-    if (appInsights) {
-        appInsights.trackEvent({
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
             name: "CloudSearchExecuted",
             properties: { 
                 keyword: keyword
@@ -1144,8 +1145,8 @@ function searchReportsCloud() {
         console.error("Search Error:", err);
         
         // Track the error
-        if (appInsights) {
-            appInsights.trackException({ exception: err });
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: err });
         }
         
         listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";

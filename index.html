@@ -134,6 +134,27 @@
     #filter-bar {
         background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
         border-bottom: 2px solid rgba(230, 126, 34, 0.2) !important;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    #filter-bar .form-select {
+        border: 1px solid #e1e5e9;
+        background-color: #ffffff;
+        transition: all 0.2s ease;
+    }
+    
+    #filter-bar .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    #filter-bar label {
+        color: #2c3e50;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
     
     /* Enhanced Recent Reports Section */
@@ -497,9 +518,12 @@
             <div class="col-12">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-3 bg-light rounded">
-                        <div id="filter-bar" class="row align-items-center">
+                        <div id="filter-bar" class="row g-3 align-items-center">
                             <div class="col-md-3">
-                                <h5 class="mb-0 text-muted"><i class="fas fa-filter"></i> Filter Reports:</h5>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-filter text-primary me-2"></i>
+                                    <label class="mb-0 fw-semibold text-dark">Filter Reports</label>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <select id="typeFilter" class="form-select" onchange="filterReports()">
@@ -512,15 +536,15 @@
                             </div>
                             <div class="col-md-3">
                                 <select id="statusFilter" class="form-select" onchange="filterReports()">
-                                    <option value="Open">Active Issues (Default)</option>
-                                    <option value="Resolved">✅ Resolved Issues</option>
-                                    <option value="All">Show All History</option>
+                                    <option value="Open">Active Issues</option>
+                                    <option value="Resolved">Resolved Issues</option>
+                                    <option value="All">All History</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <select id="sentimentFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Sentiments</option>
-                                    <option value="negative">Urgent (Safety Hazard)</option>
+                                    <option value="negative">Urgent Issues</option>
                                 </select>
                             </div>
                         </div>

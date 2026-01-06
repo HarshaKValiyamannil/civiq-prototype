@@ -175,11 +175,19 @@ function submitNewAsset() {
             body: JSON.stringify(payload)
         })
         .then(async response => {
-            // Read the error message from the cloud if possible
-            const data = await response.json().catch(() => ({})); 
+            // 1. Try to read the error message from the cloud
+            let errorMsg = "Something went wrong.";
+            try {
+                const data = await response.json();
+                if (data.error) errorMsg = data.error;
+            } catch (e) {
+                console.log("No JSON error returned");
+            }
 
+            // 2. Handle the different Status Codes
             if (response.ok) {
                 // SUCCESS (200)
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
                 Swal.fire({
                     icon: 'success',
                     title: 'Report Submitted!',
@@ -187,31 +195,33 @@ function submitNewAsset() {
                     timer: 2000
                 }).then(() => {
                     loadReports(); 
-                    // Clear form...
                     document.getElementById('description').value = "";
                     document.getElementById('imageFile').value = "";
                 });
 
             } else if (response.status === 409) {
                 // DUPLICATE (409)
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-circle text-warning"></i> Duplicate!';
                 Swal.fire({
                     icon: 'warning',
                     title: 'Already Reported',
-                    text: 'A report with this description already exists.',
+                    text: errorMsg, // Uses the message from the cloud if available
                     confirmButtonColor: '#f39c12'
                 });
 
             } else if (response.status === 422) { 
-                // --- NEW: AI REJECTION (422) ---
+                // --- AI REJECTION (422) ---
+                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-times-circle text-danger"></i> Rejected';
                 Swal.fire({
                     icon: 'error',
                     title: 'Image Rejected',
-                    text: 'Our AI thinks this image is not relevant. Please upload a clear photo of the street, road, or issue.',
+                    text: errorMsg, // Shows: "Our AI could not detect..."
                     confirmButtonColor: '#d33'
                 });
 
             } else {
                 // GENERIC ERROR
+                document.getElementById('statusMessage').innerText = "Error!";
                 Swal.fire({
                     icon: 'error',
                     title: 'Submission Failed',

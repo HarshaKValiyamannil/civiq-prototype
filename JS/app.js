@@ -114,7 +114,7 @@ function submitNewAsset() {
         Swal.fire({
             icon: 'info',
             title: 'Please Wait',
-            text: `You can submit another report in \${secondsLeft} seconds.`,
+            text: 'You can submit another report in ' + secondsLeft + ' seconds.',
             confirmButtonColor: '#3498db'
         });
         return; // STOP HERE. Do not send to cloud.
@@ -174,10 +174,12 @@ function submitNewAsset() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         })
-        .then(async response => { // Mark function as async to read body
+        .then(async response => {
+            // Read the error message from the cloud if possible
+            const data = await response.json().catch(() => ({})); 
+
             if (response.ok) {
-                // SUCCESS CASE (200 OK)
-                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
+                // SUCCESS (200)
                 Swal.fire({
                     icon: 'success',
                     title: 'Report Submitted!',
@@ -185,24 +187,31 @@ function submitNewAsset() {
                     timer: 2000
                 }).then(() => {
                     loadReports(); 
-                    // Optional: Clear form
+                    // Clear form...
                     document.getElementById('description').value = "";
                     document.getElementById('imageFile').value = "";
                 });
 
             } else if (response.status === 409) {
-                // DUPLICATE CASE (409 Conflict) - NEW!
-                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-exclamation-circle text-warning"></i> Duplicate!';
+                // DUPLICATE (409)
                 Swal.fire({
                     icon: 'warning',
                     title: 'Already Reported',
-                    text: 'A report with this description and email already exists. We are working on it!',
+                    text: 'A report with this description already exists.',
                     confirmButtonColor: '#f39c12'
                 });
 
+            } else if (response.status === 422) { 
+                // --- NEW: AI REJECTION (422) ---
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Image Rejected',
+                    text: 'Our AI thinks this image is not relevant. Please upload a clear photo of the street, road, or issue.',
+                    confirmButtonColor: '#d33'
+                });
+
             } else {
-                // GENERIC ERROR (500, 400, etc.)
-                document.getElementById('statusMessage').innerText = "Error!";
+                // GENERIC ERROR
                 Swal.fire({
                     icon: 'error',
                     title: 'Submission Failed',

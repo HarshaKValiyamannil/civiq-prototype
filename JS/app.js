@@ -9,6 +9,7 @@
 let map; // Global variable for the map
 var allReports = []; // 'var' makes this accessible to the console for debugging!
 
+// new change
 // Chart variables
 let typeChart = null;
 let statusChart = null;

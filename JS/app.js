@@ -1161,7 +1161,7 @@ function startAzureDictation() {
     // 1. CONFIGURATION
     // Use secure token from Azure Function instead of direct API key
     
-    const tokenServerUrl = 'https://fa-civiq-e6hnb5hbhrbhe7h7.uksouth-01.azurewebsites.net/api/SpeechToken'; // Your deployed function URL
+    const tokenServerUrl = 'https://fa-civiq.azurewebsites.net/api/SpeechToken'; // Your deployed function URL
     
     // Show loading state
     const micStatus = document.getElementById('micStatus');

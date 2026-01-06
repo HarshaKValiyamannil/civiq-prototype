@@ -968,3 +968,70 @@ function renderCharts(tLabels, tValues, sLabels, sValues) {
         options: { responsive: true }
     });
 }
+
+// ==========================================
+// 13. CLOUD SEARCH FUNCTIONALITY
+// ==========================================
+
+// 1. CONFIGURE URL
+// Paste your Logic App URL here, but replace the specific keyword part with 'REPLACE_ME'
+// Example: .../invoke/search/REPLACE_ME?api-version=...
+const SEARCH_URL_TEMPLATE = "https://prod-61.uksouth.logic.azure.com/workflows/3d29e41323864026903f8dc9658f9751/triggers/When_an_HTTP_request_is_received/paths/invoke/search/REPLACE_ME?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=4ARJUjp84QKY3ZxeNFDiu_4sCcGXUoWwlJB5lrmMZq0"; 
+
+function searchReportsCloud() {
+    const keyword = document.getElementById('cloudSearchInput').value.trim();
+    
+    // Safety check
+    if (!keyword) {
+        Swal.fire("Enter a keyword", "Please type something to search.", "info");
+        return;
+    }
+
+    console.log("☁️ Searching Cloud for:", keyword);
+    const listDiv = document.getElementById('reportsList');
+    
+    // Show loading state
+    listDiv.innerHTML = renderSkeletonLoader(); 
+
+    // Construct the URL dynamically
+    // If your Azure URL is: .../invoke/search/{keyword}?api...
+    // You might need to manually construct it:
+    // const baseUrl = "https://prod-XX.uksouth.logic.azure.com.../invoke/search/";
+    // const queryParams = "?api-version=2016-10-01&sp=...";
+    // const finalUrl = baseUrl + encodeURIComponent(keyword) + queryParams;
+
+    // SIMPLER METHOD (If you paste the full URL with 'REPLACE_ME' above):
+    const finalUrl = SEARCH_URL_TEMPLATE.replace("REPLACE_ME", encodeURIComponent(keyword));
+
+    fetch(finalUrl)
+    .then(response => response.json())
+    .then(data => {
+        // Handle Azure's response format (it might be { Documents: [...] } or just [...])
+        const items = data.Documents || data.value || data; 
+        
+        if (!Array.isArray(items) || items.length === 0) {
+            listDiv.innerHTML = `
+                <div class="col-12 text-center p-5">
+                    <div class="text-muted mb-3"><i class="fas fa-search fa-3x"></i></div>
+                    <h5>No matches found</h5>
+                    <p class="text-muted">Our cloud database couldn't find matches for "${keyword}".</p>
+                    <button class="btn btn-outline-primary mt-2" onclick="loadReports()">Show All Reports</button>
+                </div>`;
+            return;
+        }
+
+        // Reuse your existing render function!
+        // This keeps the cards looking exactly the same.
+        renderReportList(items); 
+        
+        // Show success toast
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+        });
+        Toast.fire({ icon: 'success', title: `Found ${items.length} matches` });
+    })
+    .catch(err => {
+        console.error("Search Error:", err);
+        listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
+    });
+}

@@ -1157,64 +1157,65 @@ function searchReportsCloud() {
 // ==========================================
 function startAzureDictation() {
     // 1. CONFIGURATION
-    // Load configuration from external file (excluded from git)
+    // Use secure token from Azure Function instead of direct API key
     
-    // Check if config is available
-    if (typeof CIVIQ_CONFIG === 'undefined') {
-        Swal.fire({
-            icon: 'error',
-            title: 'Configuration Missing',
-            text: 'Please create JS/config.js with your Azure Speech key',
-            confirmButtonColor: '#3498db'
-        });
-        return;
-    }
+    const tokenServerUrl = 'https://fa-civiq-e6hnb5hbhrbhe7h7.uksouth-01.azurewebsites.net/api/SpeechToken'; // Your deployed function URL
     
-    const AZURE_SPEECH_KEY = CIVIQ_CONFIG.AZURE_SPEECH_KEY;
-    const AZURE_REGION = CIVIQ_CONFIG.AZURE_SPEECH_REGION;
-    
-    const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
-        AZURE_SPEECH_KEY,
-        AZURE_REGION
-    );
-    
-    speechConfig.speechRecognitionLanguage = "en-GB"; // British English
-
-    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-
-    // 2. UI UPDATES
+    // Show loading state
     const micStatus = document.getElementById('micStatus');
-    const descBox = document.getElementById('description');
+    micStatus.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> Getting secure token...</span>';
     
-    micStatus.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> Connecting to Azure...</span>';
-    
-    // 3. START RECOGNITION (RecognizeOnceAsync is best for short commands)
-    recognizer.recognizeOnceAsync(
-        function (result) {
-            // Success Callback
-            if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                console.log("Azure heard:", result.text);
-                
-                // Append text logic
-                if (descBox.value.length > 0) {
-                    descBox.value += ' ' + result.text;
+    // Fetch token from secure server
+    fetch(tokenServerUrl)
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Use the token to configure speech
+        const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(data.token, data.region);
+        speechConfig.speechRecognitionLanguage = "en-GB"; // British English
+        
+        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+        const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+        
+        // Update UI
+        micStatus.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> Listening...</span>';
+        
+        // Start recognition
+        recognizer.recognizeOnceAsync(
+            function (result) {
+                // Success Callback
+                if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                    console.log("Azure heard:", result.text);
+                    
+                    const descBox = document.getElementById('description');
+                    
+                    // Append text logic
+                    if (descBox.value.length > 0) {
+                        descBox.value += ' ' + result.text;
+                    } else {
+                        descBox.value = result.text;
+                    }
+                    
+                    micStatus.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Processed by Azure</span>';
                 } else {
-                    descBox.value = result.text;
+                    micStatus.innerText = "Azure couldn't hear you clearly.";
                 }
                 
-                micStatus.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Processed by Azure</span>';
-            } else {
-                micStatus.innerText = "Azure couldn't hear you clearly.";
+                recognizer.close();
+            },
+            function (err) {
+                // Error Callback
+                console.error(err);
+                micStatus.innerHTML = '<span class="text-danger">Error connecting to Azure Speech.</span>';
+                recognizer.close();
             }
-
-            recognizer.close();
-        },
-        function (err) {
-            // Error Callback
-            console.error(err);
-            micStatus.innerHTML = '<span class="text-danger">Error connecting to Azure Speech.</span>';
-            recognizer.close();
-        }
-    );
+        );
+    })
+    .catch(error => {
+        console.error('Error getting speech token:', error);
+        micStatus.innerHTML = '<span class="text-danger">Error: Could not get secure token from server.</span>';
+    });
 }

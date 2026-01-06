@@ -1,5 +1,6 @@
 # Configuration files containing secrets
 JS/config.js
+api/local.settings.json
 
 # Node.js
 node_modules/

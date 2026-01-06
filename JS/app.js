@@ -114,7 +114,7 @@ function submitNewAsset() {
         Swal.fire({
             icon: 'info',
             title: 'Please Wait',
-            text: 'You can submit another report in ' + secondsLeft + ' seconds.',
+            text: `You can submit another report in ${secondsLeft} seconds.`,
             confirmButtonColor: '#3498db'
         });
         return; // STOP HERE. Do not send to cloud.

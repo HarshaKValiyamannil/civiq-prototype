@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     /* 1. Base Typography & Layout */
     body {
@@ -557,9 +558,14 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="text-dark fw-bold">Community Reports</h4>
-                    <button onclick="loadReports()" class="btn btn-refresh">
-                        <i class="fas fa-sync-alt"></i> Refresh Data
-                    </button>
+                    <div>
+                        <button onclick="showAnalytics()" class="btn btn-primary me-2">
+                            <i class="fas fa-chart-pie"></i> City Stats
+                        </button>
+                        <button onclick="loadReports()" class="btn btn-refresh">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="reportsList" class="row"></div>
@@ -642,6 +648,41 @@
                                 <button id="btnModalDelete" class="btn btn-danger">
                                     <i class="fas fa-trash-alt"></i> Delete Report
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="analyticsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fas fa-chart-bar me-2"></i>City Insights</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-white text-dark border-0">
+                                <h6 class="mb-0 fw-bold">Reports by Type</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chartTypes"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-white text-dark border-0">
+                                <h6 class="mb-0 fw-bold">Resolution Progress</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chartStatus"></canvas>
                             </div>
                         </div>
                     </div>

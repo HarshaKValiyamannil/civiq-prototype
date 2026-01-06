@@ -2,6 +2,9 @@
   "name": "civiq-speech-token-api",
   "version": "1.0.0",
   "description": "Azure Function to securely provide speech tokens",
+  "engines": {
+    "node": ">=18.x"
+  },
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests specified\" && exit 0"

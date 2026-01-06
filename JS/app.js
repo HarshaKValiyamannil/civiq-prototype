@@ -475,7 +475,6 @@ function getLocation() {
         });
     }
 }
-
 function upvoteReport(docId, issueType, btn) {
     btn.disabled = true;
     fetch(UPVOTE_URL, {
@@ -598,6 +597,7 @@ function openReportModal(reportId) {
     const adminSection = document.getElementById('modalAdminSection');
 
     if (isAdmin) {
+        console.log("Admin rights confirmed. Attaching listeners.");
         adminSection.style.display = 'block';
         
         // Setup Resolve Button
@@ -608,6 +608,7 @@ function openReportModal(reportId) {
 
         // Setup Delete Button
         document.getElementById('btnModalDelete').onclick = function() {
+            console.log("🔴 DELETE CLICKED for:", report.id, report.issueType);
             deleteReport(report.id, report.issueType);
         };
     } else {

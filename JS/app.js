@@ -2,6 +2,9 @@
 // CIVIQ SMART CITY - MAIN LOGIC
 // ==========================================
 
+// NEW: Application Insights tracking
+let appInsights = window.appInsights; 
+
 let map; // Global variable for the map
 var allReports = []; // 'var' makes this accessible to the console for debugging!
 
@@ -99,6 +102,12 @@ function getSentimentText(report) {
 // ==========================================
 $(document).ready(function () {
     console.log("🚀 CiviQ App Loaded!"); 
+    
+    // NEW: Track the page view
+    if (appInsights) {
+        appInsights.trackPageView({ name: "HomePage" });
+    }
+    
     $("#submitBtn").click(submitNewAsset);
     loadReports();
 });
@@ -193,6 +202,19 @@ function submitNewAsset() {
             if (response.ok) {
                 // SUCCESS (200)
                 document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
+                
+                // --- NEW: LOGICALLY CONNECTED MONITORING ---
+                if (appInsights) {
+                    appInsights.trackEvent({
+                        name: "ReportSubmitted",
+                        properties: { 
+                            issueType: issueType,      // e.g., "Pothole"
+                            hasImage: true             // Boolean flag
+                        }
+                    });
+                }
+                // -------------------------------------------
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Report Submitted!',
@@ -236,6 +258,13 @@ function submitNewAsset() {
         })
         .catch(error => {
             console.error('Error:', error);
+            
+            // --- NEW: TRACK EXCEPTION ---
+            if (appInsights) {
+                appInsights.trackException({ exception: error });
+            }
+            // ----------------------------
+            
             Swal.fire('Network Error', 'Please check your internet connection.', 'error');
         });
     };
@@ -507,6 +536,18 @@ function getLocation() {
 }
 function upvoteReport(docId, issueType, btn) {
     btn.disabled = true;
+    
+    // Track the upvote event
+    if (appInsights) {
+        appInsights.trackEvent({
+            name: "ReportUpvoted",
+            properties: { 
+                issueType: issueType,
+                reportId: docId
+            }
+        });
+    }
+    
     fetch(UPVOTE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -524,6 +565,12 @@ function upvoteReport(docId, issueType, btn) {
     })
     .catch(err => {
         console.error("Upvote error:", err);
+        
+        // Track the error
+        if (appInsights) {
+            appInsights.trackException({ exception: err });
+        }
+        
         btn.disabled = false;
     });
 }
@@ -652,6 +699,17 @@ function openReportModal(reportId) {
 // Updated to accept 'issueType'
 function deleteReport(reportId, issueType) {
     console.log("Attempting delete:", reportId, issueType); // Debugging line
+    
+    // Track the delete event
+    if (appInsights) {
+        appInsights.trackEvent({
+            name: "ReportDeleted",
+            properties: { 
+                issueType: issueType,
+                reportId: reportId
+            }
+        });
+    }
 
     Swal.fire({
         title: 'Are you sure?',
@@ -687,6 +745,12 @@ function deleteReport(reportId, issueType) {
             })
             .catch(err => {
                 console.error(err);
+                
+                // Track the error
+                if (appInsights) {
+                    appInsights.trackException({ exception: err });
+                }
+                
                 Swal.fire("Error", "Could not delete. Check console for details.", "error");
             });
         }
@@ -702,6 +766,17 @@ function resolveIssue(reportId) {
     // 1. Find the report in memory
     const report = allReports.find(r => r.id === reportId);
     if (!report) return;
+    
+    // Track the resolve event
+    if (appInsights) {
+        appInsights.trackEvent({
+            name: "ReportResolved",
+            properties: { 
+                issueType: report.issueType,
+                reportId: reportId
+            }
+        });
+    }
 
     // 2. Confirm with the Admin
     Swal.fire({
@@ -744,6 +819,12 @@ function resolveIssue(reportId) {
             })
             .catch(err => {
                 console.error(err);
+                
+                // Track the error
+                if (appInsights) {
+                    appInsights.trackException({ exception: err });
+                }
+                
                 Swal.fire("Error", "Could not connect to cloud.", "error");
             });
         }
@@ -900,6 +981,13 @@ function renderCharts(tLabels, tValues, sLabels, sValues) {
 // 12. CLOUD ANALYTICS
 // ==========================================
 function showAnalytics() {
+    // Track the analytics view event
+    if (appInsights) {
+        appInsights.trackEvent({
+            name: "AnalyticsViewed"
+        });
+    }
+    
     // 1. Open Modal & Show Loading
     new bootstrap.Modal(document.getElementById('analyticsModal')).show();
     
@@ -934,6 +1022,12 @@ function showAnalytics() {
     })
     .catch(err => {
         console.error("Analytics Error:", err);
+        
+        // Track the error
+        if (appInsights) {
+            appInsights.trackException({ exception: err });
+        }
+        
         Swal.fire("Error", "Could not fetch stats from cloud.", "error");
     });
 }
@@ -992,6 +1086,16 @@ function searchReportsCloud() {
         Swal.fire("Enter a keyword", "Please type something to search.", "info");
         return;
     }
+    
+    // Track the search event
+    if (appInsights) {
+        appInsights.trackEvent({
+            name: "CloudSearchExecuted",
+            properties: { 
+                keyword: keyword
+            }
+        });
+    }
 
     console.log("☁️ Searching Cloud for:", keyword);
     const listDiv = document.getElementById('reportsList');
@@ -1020,7 +1124,7 @@ function searchReportsCloud() {
                 <div class="col-12 text-center p-5">
                     <div class="text-muted mb-3"><i class="fas fa-search fa-3x"></i></div>
                     <h5>No matches found</h5>
-                    <p class="text-muted">Our cloud database couldn't find matches for "${keyword}".</p>
+                    <p class="text-muted">Our cloud database couldn't find matches for "\${keyword}".</p>
                     <button class="btn btn-outline-primary mt-2" onclick="loadReports()">Show All Reports</button>
                 </div>`;
             return;
@@ -1034,10 +1138,16 @@ function searchReportsCloud() {
         const Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
         });
-        Toast.fire({ icon: 'success', title: `Found ${items.length} matches` });
+        Toast.fire({ icon: 'success', title: `Found \${items.length} matches` });
     })
     .catch(err => {
         console.error("Search Error:", err);
+        
+        // Track the error
+        if (appInsights) {
+            appInsights.trackException({ exception: err });
+        }
+        
         listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
     });
 }

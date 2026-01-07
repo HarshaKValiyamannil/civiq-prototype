@@ -29,6 +29,7 @@ const UPVOTE_URL = "https://prod-53.uksouth.logic.azure.com:443/workflows/cebfee
 const VIEW_URL = "https://prod-14.uksouth.logic.azure.com:443/workflows/1f435b6dbd6e454192fc835d9c38ec93/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=Xq_1QkvdDjxsSzJVFqUBJWyaEeh-qN_DpbfRwaO03Vw"; 
 const DELETE_LOGIC_APP_URL = "https://prod-34.uksouth.logic.azure.com:443/workflows/833b2c4259df4fcf8139c38c6eec5920/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=F-C235Mq2bqlW6M7inlZ7EjOu4gcxVzBmCHfBfvXhIc";
 const ANALYTICS_LOGIC_APP_URL = "https://prod-04.uksouth.logic.azure.com:443/workflows/4a85ef87f9624df9ab888606c5dfbfeb/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=8huoMVlPrNb01OmLxFggJRtJkTRNUA06PPmS-im_mWU";
+const TRANSLATE_URL = "https://prod-32.uksouth.logic.azure.com:443/workflows/e53dedcbd5d4455aac20278d08a222db/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=FPtGcyar-WyVAawCLHbfJhrEyxfqDX2uHaipdqbOuQE";
 
 
 // ==========================================
@@ -444,6 +445,11 @@ function renderReportList(reports) {
             '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
             '</div>' +
             '<p>' + report.description + '</p>' +
+            '<div class="mb-3 d-flex gap-2">' +
+                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'es\')">ES 🇪🇸</button>' +
+                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'fr\')">FR 🇫🇷</button>' +
+                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'de\')">DE 🇩🇪</button>' +
+            '</div>' +
             (report.aiCaption ? '<div class="ai-insight-box mb-2"><div class="ai-insight-title"><i class="fas fa-search"></i><span>AI Insight</span></div><div class="ai-insight-content">"' + report.aiCaption + '"</div></div>' : '') +
             '<div class="mt-auto">' +
             '<div class="d-flex gap-2 align-items-center">' + voteButton + '</div>' +
@@ -593,6 +599,92 @@ function upvoteReport(docId, issueType, btn) {
             window.appInsights.trackException({ exception: err });
         }
         btn.disabled = false; // Re-enable if it failed
+    });
+}
+
+// Translation function
+function translateReport(btn, targetLang) {
+    // Get the report description from the card
+    const card = btn.closest('.card');
+    const descriptionElement = card.querySelector('p');
+    const originalText = descriptionElement.textContent;
+    
+    // Disable all translation buttons temporarily
+    const translationButtons = card.querySelectorAll('[onclick^="translateReport"]');
+    translationButtons.forEach(button => button.disabled = true);
+    
+    // Show loading state
+    const originalBtnText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    
+    // Track translation event
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
+            name: "ReportTranslated",
+            properties: { 
+                targetLanguage: targetLang,
+                originalLength: originalText.length
+            }
+        });
+    }
+    
+    // Call translation Logic App
+    fetch(TRANSLATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            text: originalText,
+            targetLanguage: targetLang
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Translation failed: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Update the description with translated text
+        if (data.translatedText) {
+            descriptionElement.innerHTML = `<strong>[${targetLang.toUpperCase()}]</strong> ${data.translatedText}`;
+            
+            // Show success message
+            const Toast = Swal.mixin({
+                toast: true, 
+                position: 'top-end', 
+                showConfirmButton: false, 
+                timer: 3000
+            });
+            Toast.fire({ 
+                icon: 'success', 
+                title: `Translated to ${targetLang.toUpperCase()}!` 
+            });
+        } else {
+            throw new Error("No translation returned");
+        }
+    })
+    .catch(error => {
+        console.error("Translation error:", error);
+        
+        // Track the error
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: error });
+        }
+        
+        // Show error message
+        Swal.fire({
+            icon: 'error',
+            title: 'Translation Failed',
+            text: 'Could not translate the report. Please try again.',
+            confirmButtonColor: '#1abc9c'
+        });
+        
+        // Restore button text
+        btn.innerHTML = originalBtnText;
+    })
+    .finally(() => {
+        // Re-enable all translation buttons
+        translationButtons.forEach(button => button.disabled = false);
     });
 }
 

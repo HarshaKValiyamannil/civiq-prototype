@@ -527,29 +527,82 @@ function initMap(reports) {
 // 8. UTILITIES (Search & Upvote)
 // ==========================================
 function searchAddress() {
-    const address = document.getElementById('addressSearch').value;
+    const address = document.getElementById('addressSearch').value.trim();
     if (!address) {
         Swal.fire({
-            icon: 'error',
+            icon: 'warning',
             title: 'Address Required',
             text: 'Please enter an address to search.',
             confirmButtonColor: '#1abc9c'
         });
         return;
     }
-    document.getElementById('statusMessage').innerText = "🔍 Finding...";
-
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(address)}`)
-    .then(r => r.json())
-    .then(data => {
-        if (data.length > 0) {
-            document.getElementById('latitude').value = data[0].lat;
-            document.getElementById('longitude').value = data[0].lon;
-            document.getElementById('statusMessage').innerText = "📍 Found!";
-            if (map) map.setView([data[0].lat, data[0].lon], 15);
-        } else {
-            document.getElementById('statusMessage').innerText = "❌ Not found.";
+    
+    const statusMessage = document.getElementById('statusMessage');
+    statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching for address...';
+    
+    // Improved geocoding with better error handling
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=gb&limit=5`;
+    
+    fetch(url, {
+        headers: {
+            'User-Agent': 'CiviQ-SmartCity-App' // Required by Nominatim terms
         }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.length > 0) {
+            // Take the first result (most relevant)
+            const result = data[0];
+            document.getElementById('latitude').value = result.lat;
+            document.getElementById('longitude').value = result.lon;
+            
+            statusMessage.innerHTML = `<i class="fas fa-check-circle text-success"></i> Found: ${result.display_name.substring(0, 60)}${result.display_name.length > 60 ? '...' : ''}`;
+            
+            // Update map view
+            if (map) {
+                const latLng = [parseFloat(result.lat), parseFloat(result.lon)];
+                map.setView(latLng, 16);
+                
+                // Add a temporary marker to show the location
+                if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                }
+                tempMarker = L.marker(latLng, {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background-color: #e67e22; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20]
+                    })
+                }).addTo(map);
+            }
+        } else {
+            statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> No results found. Try a more specific address.';
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'Address Not Found',
+                text: 'We couldn\'t find that address. Please try:\n• Including the city/town name\n• Using a nearby landmark\n• Checking the spelling',
+                confirmButtonColor: '#1abc9c'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Geocoding error:', error);
+        statusMessage.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Search failed. Please try again.';
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Search Failed',
+            text: 'Unable to search for the address. Please check your internet connection and try again.',
+            confirmButtonColor: '#1abc9c'
+        });
     });
 }
 
@@ -1358,6 +1411,59 @@ function searchReportsCloud() {
     }
 
     console.log("☁️ Searching Cloud for:", keyword);
+    const listDiv = document.getElementById('reportsList');
+    
+    // Show loading state
+    listDiv.innerHTML = renderSkeletonLoader(); 
+
+    // Construct the URL dynamically
+    // If your Azure URL is: .../invoke/search/{keyword}?api...
+    // You might need to manually construct it:
+    // const baseUrl = "https://prod-XX.uksouth.logic.azure.com.../invoke/search/";
+    // const queryParams = "?api-version=2016-10-01&sp=...";
+    // const finalUrl = baseUrl + encodeURIComponent(keyword) + queryParams;
+
+    // SIMPLER METHOD (If you paste the full URL with 'REPLACE_ME' above):
+    const finalUrl = SEARCH_URL_TEMPLATE.replace("REPLACE_ME", encodeURIComponent(keyword));
+
+    fetch(finalUrl)
+    .then(response => response.json())
+    .then(data => {
+        // Handle Azure's response format (it might be { Documents: [...] } or just [...])
+        const items = data.Documents || data.value || data; 
+        
+        if (!Array.isArray(items) || items.length === 0) {
+            listDiv.innerHTML = `
+                <div class="col-12 text-center p-5">
+                    <div class="text-muted mb-3"><i class="fas fa-search fa-3x"></i></div>
+                    <h5>No matches found</h5>
+                    <p class="text-muted">Our cloud database couldn't find matches for "\${keyword}".</p>
+                    <button class="btn btn-outline-primary mt-2" onclick="loadReports()">Show All Reports</button>
+                </div>`;
+            return;
+        }
+
+        // Reuse your existing render function!
+        // This keeps the cards looking exactly the same.
+        renderReportList(items); 
+        
+        // Show success toast
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+        });
+        Toast.fire({ icon: 'success', title: `Found \${items.length} matches` });
+    })
+    .catch(err => {
+        console.error("Search Error:", err);
+        
+        // Track the error
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: err });
+        }
+        
+        listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
+    });
+}   console.log("☁️ Searching Cloud for:", keyword);
     const listDiv = document.getElementById('reportsList');
     
     // Show loading state

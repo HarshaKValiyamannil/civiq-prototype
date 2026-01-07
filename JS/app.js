@@ -472,9 +472,14 @@ function renderReportList(reports) {
                     // Use backticks to properly escape the report ID in the onchange attribute
                     '<select class="form-select form-select-sm" style="width: auto;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
                         '<option value="">Select language</option>' +
+                        '<option value="en">English 🇬🇧</option>' +
                         '<option value="es">Spanish 🇪🇸</option>' +
                         '<option value="fr">French 🇫🇷</option>' +
                         '<option value="de">German 🇩🇪</option>' +
+                        '<option value="pl">Polish 🇵🇱</option>' +
+                        '<option value="ur">Urdu 🇵🇰</option>' +
+                        '<option value="pa">Punjabi 🇮🇳</option>' +
+                        '<option value="bn">Bengali 🇧🇩</option>' +
                     '</select>' +
                 '</div>' +
             '</div>' +
@@ -829,7 +834,21 @@ function handleTranslationDropdown(selectElement, reportId) {
         console.log("📄 Translation response data:", data);
         // Update the description with translated text
         if (data.translatedText) {
-            descriptionElement.innerHTML = `<strong>[${selectedLang.toUpperCase()}]</strong> ${data.translatedText}`;
+            // Check if text is already translated to prevent tag accumulation
+            const currentText = descriptionElement.textContent.trim();
+            
+            // If text already has a language tag (starts with [XX]), remove it first
+            let cleanText = data.translatedText;
+            if (currentText.match(/^\[([A-Z]{2})\]/)) {
+                // Extract the original text (everything after the language tag)
+                const textMatch = currentText.match(/^\[[A-Z]{2}\]\s*(.*)/);
+                if (textMatch && textMatch[1]) {
+                    cleanText = textMatch[1];
+                }
+            }
+            
+            // Update with new language tag
+            descriptionElement.innerHTML = `<strong>[${selectedLang.toUpperCase()}]</strong> ${cleanText}`;
             
             console.log("✅ Translation successful, updated text:", descriptionElement.innerHTML);
             

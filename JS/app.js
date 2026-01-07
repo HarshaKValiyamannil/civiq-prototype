@@ -960,7 +960,7 @@ function showAnalytics() {
 
     console.log("📊 Fetching analytics from Cloud...");
 
-    fetch(ANALYTICS_LOGIC_APP_URL)
+    fetch(ANALYTICS_LOGIC_APP_URL, { method: 'POST' })
     .then(response => response.json())
     .then(data => {
         console.log("📊 Analytics Data:", data);

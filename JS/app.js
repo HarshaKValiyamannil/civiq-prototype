@@ -946,6 +946,20 @@ function jumpToMap(lat, lon) {
 // ==========================================
 // 12. CLOUD ANALYTICS
 // ==========================================
+function syncAndShowAnalytics() {
+    console.log("🔄 Syncing local data before showing analytics...");
+    
+    // Load fresh reports data first to ensure allReports is up-to-date
+    loadReports().then(() => {
+        console.log("✅ Data synced, now showing analytics");
+        showAnalytics();
+    }).catch(error => {
+        console.error("❌ Failed to sync data:", error);
+        // Still show analytics even if sync fails
+        showAnalytics();
+    });
+}
+
 function showAnalytics() {
     // Track the analytics view event
     if (window.appInsights) {
@@ -1042,7 +1056,7 @@ function showAnalytics() {
         let trendValues = [];
         
         if (Array.isArray(rawTrends) && rawTrends.length > 0) {
-            trendLabels = rawTrends.map(item => item.date || item.label || "Unknown");
+            trendLabels = rawTrends.map(item => item.day || item.date || item.label || "Unknown");
             trendValues = rawTrends.map(item => item.count || item.value || 0);
         } else {
             // Fallback: create sample trend data if no trends data from cloud

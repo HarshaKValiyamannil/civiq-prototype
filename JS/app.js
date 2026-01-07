@@ -775,14 +775,19 @@ function handleTranslationDropdown(selectElement, reportId) {
     // If no language selected, do nothing
     if (!selectedLang) return;
     
-    console.log("🔍 Translation triggered:", { selectedLang, reportId });
+    // SANITIZE INPUT: Clean reportId to prevent injection issues
+    const cleanReportId = String(reportId).replace(/[^a-zA-Z0-9-_]/g, "");
+    
+    console.log("🔍 Translation triggered:", { selectedLang, reportId: cleanReportId });
     
     // Get the report description from the card
     const card = selectElement.closest('.card');
     const descriptionElement = card.querySelector('p');
-    const originalText = descriptionElement.textContent;
     
-    console.log("📄 Original text:", originalText);
+    // CLEAN THE TEXT: Remove or escape tokens that might crash the browser controller
+    const originalText = descriptionElement.textContent.replace(/['"`]/g, " ").trim();
+    
+    console.log("📄 Sanitized text for translation:", originalText);
     
     // Disable the dropdown temporarily
     selectElement.disabled = true;

@@ -594,7 +594,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select id="typeFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Types</option>
                                     <option value="Pothole">Potholes</option>
@@ -603,11 +603,19 @@
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select id="statusFilter" class="form-select" onchange="filterReports()">
                                     <option value="All">All Statuses</option>
                                     <option value="Open">Active Issues</option>
                                     <option value="Resolved">Resolved</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select id="sentimentFilter" class="form-select" onchange="filterReports()">
+                                    <option value="All">All Sentiments</option>
+                                    <option value="Positive">Positive</option>
+                                    <option value="Neutral">Neutral</option>
+                                    <option value="Negative">Urgent/Negative</option>
                                 </select>
                             </div>
 

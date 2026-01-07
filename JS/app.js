@@ -470,7 +470,7 @@ function renderReportList(reports) {
                 '<div class="d-flex align-items-center gap-2">' +
                     '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
                     // Use backticks to properly escape the report ID in the onchange attribute
-                    '<select class="form-select form-select-sm" style="width: auto;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
+                    '<select class="form-select form-select-sm" style="width: 180px;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
                         '<option value="">Select language</option>' +
                         '<option value="en">English 🇬🇧</option>' +
                         '<option value="es">Spanish 🇪🇸</option>' +
@@ -837,12 +837,21 @@ function handleTranslationDropdown(selectElement, reportId) {
             // Check if text is already translated to prevent tag accumulation
             const currentText = descriptionElement.textContent.trim();
             
-            // If text already has a language tag (starts with [XX]), remove it first
+            // If text already has a language tag, extract clean text
             let cleanText = data.translatedText;
-            if (currentText.match(/^\[([A-Z]{2})\]/)) {
-                // Extract the original text (everything after the language tag)
+            
+            // Handle case where translation service returns text with language tags
+            if (data.translatedText.match(/^\[[A-Z]{2}\]/)) {
+                // Extract text after the language tag from translation response
+                const translatedMatch = data.translatedText.match(/^\[[A-Z]{2}\]\s*(.*)/);
+                if (translatedMatch && translatedMatch[1]) {
+                    cleanText = translatedMatch[1];
+                }
+            } else if (currentText.match(/^\[[A-Z]{2}\]/)) {
+                // Extract original text (everything after the language tag)
                 const textMatch = currentText.match(/^\[[A-Z]{2}\]\s*(.*)/);
                 if (textMatch && textMatch[1]) {
+                    // Use the clean original text for translation
                     cleanText = textMatch[1];
                 }
             }

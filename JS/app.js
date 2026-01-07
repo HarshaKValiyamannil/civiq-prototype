@@ -1074,5 +1074,3 @@ function searchReportsCloud() {
         listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
     });
 }
-
-// test test test

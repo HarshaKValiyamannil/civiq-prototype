@@ -537,9 +537,9 @@ function getLocation() {
     }
 }
 function upvoteReport(docId, issueType, btn) {
-    btn.disabled = true;
+    btn.disabled = true; // Prevent double clicks
     
-    // Track the upvote event
+    // Track the upvote event for Application Insights
     if (window.appInsights) {
         window.appInsights.trackEvent({
             name: "ReportUpvoted",
@@ -557,23 +557,37 @@ function upvoteReport(docId, issueType, btn) {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.newVoteCount) {
-            // Find the vote badge next to this button and update it
-            const voteBadge = btn.nextElementSibling;
-            if (voteBadge && voteBadge.classList.contains('vote-badge')) {
-                voteBadge.innerHTML = `\${data.newVoteCount} <i class="fas fa-arrow-up"></i>`;
+        // If the Logic App returns the new vote count
+        if (data.newVoteCount !== undefined) {
+            
+            // 1. Update the count in your local memory (allReports)
+            const reportIndex = allReports.findIndex(r => r.id === docId);
+            if (reportIndex !== -1) {
+                allReports[reportIndex].votes = data.newVoteCount;
             }
+
+            // 2. Immediate UI Update: Find the badge next to this specific button and update its text
+            // In your renderReportList, the badge is the previous sibling of the button's parent or within the same container
+            const voteBadge = btn.parentElement.querySelector('.badge');
+            if (voteBadge) {
+                voteBadge.innerHTML = `<i class="fas fa-arrow-up text-primary me-1"></i>${data.newVoteCount} upvotes`;
+            }
+
+            // 3. Optional: Re-render the whole list to keep everything in sync
+            // renderReportList(currentFilteredData); 
+            
+            const Toast = Swal.mixin({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000
+            });
+            Toast.fire({ icon: 'success', title: 'Support registered!' });
         }
     })
     .catch(err => {
         console.error("Upvote error:", err);
-        
-        // Track the error
         if (window.appInsights) {
             window.appInsights.trackException({ exception: err });
         }
-        
-        btn.disabled = false;
+        btn.disabled = false; // Re-enable if it failed
     });
 }
 
@@ -679,13 +693,21 @@ function openReportModal(reportId) {
         console.log("Admin rights confirmed. Attaching listeners.");
         adminSection.style.display = 'block';
         
-        // Setup Resolve Button
-        document.getElementById('btnModalResolve').onclick = function() {
-            resolveIssue(report.id); // Call your existing function
-            bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
-        };
+        // NEW: Get a reference to the resolve button
+        const resolveBtn = document.getElementById('btnModalResolve');
+        
+        // NEW: Hide the button if the issue is already resolved
+        if (report.status === "Resolved") {
+            resolveBtn.style.display = 'none';
+        } else {
+            resolveBtn.style.display = 'block';
+            resolveBtn.onclick = function() {
+                resolveIssue(report.id);
+                bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+            };
+        }
 
-        // Setup Delete Button
+        // Setup Delete Button (always visible for admins)
         document.getElementById('btnModalDelete').onclick = function() {
             console.log("🔴 DELETE CLICKED for:", report.id, report.issueType);
             deleteReport(report.id, report.issueType);
@@ -814,7 +836,26 @@ function resolveIssue(reportId) {
             .then(response => {
                 if(response.ok) {
                     Swal.fire("Resolved!", "Citizen notified via Outlook.", "success");
-                    loadReports(); 
+                    
+                    // --- NEW: LOCAL UI UPDATE ---
+                    // 1. Update the status in your local memory
+                    const reportIndex = allReports.findIndex(r => r.id === reportId);
+                    if (reportIndex !== -1) {
+                        allReports[reportIndex].status = "Resolved";
+                    }
+
+                    // 2. Re-render the list immediately using the updated local data
+                    // This avoids a full network refresh while updating all badges and buttons
+                    renderReportList(allReports); 
+                    
+                    // Optional: Refresh the map to turn the pin grey
+                    if (map) {
+                        map.remove();
+                        map = null;
+                        initMap(allReports);
+                    }
+                    // ----------------------------
+                    
                 } else {
                     throw new Error("Logic App failed");
                 }

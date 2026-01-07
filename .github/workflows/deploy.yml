@@ -3,22 +3,28 @@ name: Deploy CiviQ to Azure Storage
 on:
   push:
     branches:
-      - main  # Triggered when you push to the main branch
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: 'Checkout Github Action'
+    - name: 'Checkout'
       uses: actions/checkout@v3
+
+    # DEBUG STEP: This tells us exactly what the server sees
+    - name: 'List Files'
+      run: ls -R
 
     - name: 'Deploy to Azure Storage'
       uses: azure/CLI@v1
       with:
         inlineScript: |
+          # If the 'List Files' step shows index.html is at the root, use '.'
+          # If it shows index.html is inside CiviQ_Project, use './CiviQ_Project'
           az storage blob upload-batch \
             --account-name stciviqharsha \
             --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
             --destination '$web' \
-            --source ./CiviQ_Project \
+            --source . \
             --overwrite

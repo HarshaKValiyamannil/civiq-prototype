@@ -359,7 +359,7 @@ function filterReports() {
     const statusFilter = statusEl ? statusEl.value : 'All';
     const sentimentFilter = sentimentEl ? sentimentEl.value : 'All'; 
     
-    console.log(`🚀 Filtering: Type=\${typeFilter}, Sentiment=\${sentimentFilter}, Status=\${statusFilter}`);
+    console.log(`🚀 Filtering: Type=${typeFilter}, Sentiment=${sentimentFilter}, Status=${statusFilter}`);
 
     let filteredReports = allReports.filter(report => {
         // 1. Filter Type
@@ -378,7 +378,7 @@ function filterReports() {
             const cleanFilter = sentimentFilter.toLowerCase().trim();
             
             // Debug log to confirm it works
-            // console.log(`Comparing: '\${cleanValue}' vs '\${cleanFilter}'`);
+            // console.log(`Comparing: '${cleanValue}' vs '${cleanFilter}'`);
             
             return cleanValue === cleanFilter;
         }
@@ -422,13 +422,13 @@ function renderReportList(reports) {
                         <i class="fas fa-search"></i>
                         <span>AI Insight</span>
                     </div>
-                    <div class="ai-insight-content">"\${report.aiCaption}"</div>
+                    <div class="ai-insight-content">"${report.aiCaption}"</div>
                 </div>` : "";
         
         // Status Badge with consistent styling
         const reportStatus = report.status || 'Open';
         const statusClass = reportStatus === 'Resolved' ? 'status-resolved' : 'status-open';
-        let statusBadge = `<span class="status-badge \${statusClass}">\${reportStatus}</span>`;
+        let statusBadge = `<span class="status-badge ${statusClass}">${reportStatus}</span>`;
         
         // Urgent Indicator (Only for negative sentiment)
         const displaySentiment = getSentimentText(report);
@@ -1437,7 +1437,7 @@ function searchReportsCloud() {
                 <div class="col-12 text-center p-5">
                     <div class="text-muted mb-3"><i class="fas fa-search fa-3x"></i></div>
                     <h5>No matches found</h5>
-                    <p class="text-muted">Our cloud database couldn't find matches for "\${keyword}".</p>
+                    <p class="text-muted">Our cloud database couldn't find matches for "${keyword}".</p>
                     <button class="btn btn-outline-primary mt-2" onclick="loadReports()">Show All Reports</button>
                 </div>`;
             return;
@@ -1451,7 +1451,7 @@ function searchReportsCloud() {
         const Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
         });
-        Toast.fire({ icon: 'success', title: `Found \${items.length} matches` });
+        Toast.fire({ icon: 'success', title: `Found ${items.length} matches` });
     })
     .catch(err => {
         console.error("Search Error:", err);

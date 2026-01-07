@@ -1219,7 +1219,13 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
                 borderWidth: 1
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: true,
+            plugins: { 
+                legend: { display: false } 
+            }
+        }
     });
 
     // Chart 2: Status (Doughnut)
@@ -1232,7 +1238,10 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
                 backgroundColor: ['#3498db', '#27ae60', '#95a5a6'] // Open=Blue, Resolved=Green
             }]
         },
-        options: { responsive: true }
+        options: { 
+            responsive: true,
+            maintainAspectRatio: true
+        }
     });
 
     // Chart 3: Sentiment (Pie/Doughnut) - COMMENTED OUT

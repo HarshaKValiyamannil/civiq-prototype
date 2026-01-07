@@ -16,5 +16,9 @@ jobs:
       uses: azure/CLI@v1
       with:
         inlineScript: |
-          # This command uploads only the contents of your project folder to the $web container
-          az storage blob upload-batch --account-name stciviqharsha --account-key ${{ secrets.AZURE_STORAGE_KEY }} --destination '$web' --source . --overwrite
+          az storage blob upload-batch \
+            --account-name stciviqharsha \
+            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+            --destination '$web' \
+            --source ./CiviQ_Project \
+            --overwrite

@@ -284,7 +284,8 @@ function loadReports() {
     // Show skeleton loader immediately
     listDiv.innerHTML = renderSkeletonLoader();
 
-    fetch(VIEW_URL)
+    // ADD 'return' HERE
+    return fetch(VIEW_URL)
     .then(response => response.json())
     .then(data => {
         console.log("📦 Data received:", data);
@@ -315,6 +316,8 @@ function loadReports() {
     .catch(error => {
         console.error('❌ Load Error:', error);
         listDiv.innerText = "Failed to load reports.";
+        // Ensure the error propagates so .catch() in syncAndShowAnalytics works
+        throw error; 
     });
 }
 

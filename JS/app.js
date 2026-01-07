@@ -1091,7 +1091,7 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
     // Destroy old charts to prevent glitches
     if (typeChart) typeChart.destroy();
     if (statusChart) statusChart.destroy();
-    if (sentimentChart) sentimentChart.destroy();
+    // if (sentimentChart) sentimentChart.destroy(); // COMMENTED OUT
     if (trendsChart) trendsChart.destroy();
 
     // Chart 1: Issue Types (Bar)
@@ -1122,40 +1122,40 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
         options: { responsive: true }
     });
 
-    // Chart 3: Sentiment (Pie/Doughnut) - Only render if we have data
-    if (sentLabels.length > 0 && sentValues.length > 0) {
-        // Define colors: Green (Positive), Grey (Neutral), Red (Negative)
-        const sentimentColors = sentLabels.map(label => {
-            if (label.toLowerCase().includes('positive')) return '#27ae60'; // Green
-            if (label.toLowerCase().includes('negative') || label.toLowerCase().includes('urgent')) return '#e74c3c'; // Red
-            return '#95a5a6'; // Grey (default/neutral)
-        });
+    // Chart 3: Sentiment (Pie/Doughnut) - COMMENTED OUT
+    // if (sentLabels.length > 0 && sentValues.length > 0) {
+    //     // Define colors: Green (Positive), Grey (Neutral), Red (Negative)
+    //     const sentimentColors = sentLabels.map(label => {
+    //         if (label.toLowerCase().includes('positive')) return '#27ae60'; // Green
+    //         if (label.toLowerCase().includes('negative') || label.toLowerCase().includes('urgent')) return '#e74c3c'; // Red
+    //         return '#95a5a6'; // Grey (default/neutral)
+    //     });
 
-        sentimentChart = new Chart(ctxSentiment, {
-            type: 'doughnut',
-            data: {
-                labels: sentLabels,
-                datasets: [{
-                    data: sentValues,
-                    backgroundColor: sentimentColors,
-                    borderColor: '#ffffff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
-    }
+    //     sentimentChart = new Chart(ctxSentiment, {
+    //         type: 'doughnut',
+    //         data: {
+    //             labels: sentLabels,
+    //             datasets: [{
+    //                 data: sentValues,
+    //                 backgroundColor: sentimentColors,
+    //                 borderColor: '#ffffff',
+    //                 borderWidth: 2
+    //             }]
+    //         },
+    //         options: {
+    //             responsive: true,
+    //             plugins: {
+    //                 legend: {
+    //                     position: 'bottom',
+    //                     labels: {
+    //                         padding: 20,
+    //                         usePointStyle: true
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
     // Chart 4: Trends (Line Chart)
     // Use real data from cloud parameters

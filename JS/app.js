@@ -981,12 +981,13 @@ function showAnalytics() {
         }
 
         // ROBUST DATA HANDLING
-        // The Logic App returns { types: {...}, status: {...} }
+        // The Logic App returns { types: {...}, status: {...}, sentiment: {...} }
         // We need to extract the array of items from inside those objects
         // Usually Cosmos returns { "Documents": [...] } or { "value": [...] }
         
         const rawTypes = data.types.Documents || data.types.value || data.types; 
         const rawStatus = data.status.Documents || data.status.value || data.status;
+        const rawSentiment = data.sentiment.Documents || data.sentiment.value || data.sentiment || [];
 
         // Additional safety checks for data arrays
         if (!Array.isArray(rawTypes) || !Array.isArray(rawStatus)) {
@@ -1001,8 +1002,43 @@ function showAnalytics() {
         const statusLabels = rawStatus.map(item => item.status || "Unknown");
         const statusValues = rawStatus.map(item => item.count || 0);
 
+        // Process Sentiment Data (handle case where sentiment data might not exist)
+        let sentimentLabels = [];
+        let sentimentValues = [];
+        
+        if (Array.isArray(rawSentiment) && rawSentiment.length > 0) {
+            sentimentLabels = rawSentiment.map(item => item.sentiment || "Unknown");
+            sentimentValues = rawSentiment.map(item => item.count || 0);
+        } else {
+            // Fallback: derive sentiment from existing reports if no sentiment data
+            const sentimentCounts = { "Positive": 0, "Neutral": 0, "Negative": 0 };
+            allReports.forEach(report => {
+                const sentiment = report.sentiments || report.sentiment;
+                if (sentiment) {
+                    const sentimentText = typeof sentiment === 'string' ? sentiment : sentiment.text || "Neutral";
+                    if (sentimentText.toLowerCase().includes('positive') || sentimentText.toLowerCase().includes('good')) {
+                        sentimentCounts["Positive"]++;
+                    } else if (sentimentText.toLowerCase().includes('negative') || sentimentText.toLowerCase().includes('bad') || sentimentText.toLowerCase().includes('urgent')) {
+                        sentimentCounts["Negative"]++;
+                    } else {
+                        sentimentCounts["Neutral"]++;
+                    }
+                } else {
+                    sentimentCounts["Neutral"]++;
+                }
+            });
+            
+            // Convert to arrays, excluding zero counts
+            Object.entries(sentimentCounts).forEach(([label, count]) => {
+                if (count > 0) {
+                    sentimentLabels.push(label);
+                    sentimentValues.push(count);
+                }
+            });
+        }
+
         // Render
-        renderCharts(typeLabels, typeValues, statusLabels, statusValues);
+        renderCharts(typeLabels, typeValues, statusLabels, statusValues, sentimentLabels, sentimentValues);
     })
     .catch(err => {
         console.error("Analytics Error:", err);
@@ -1016,13 +1052,15 @@ function showAnalytics() {
     });
 }
 
-function renderCharts(tLabels, tValues, sLabels, sValues) {
+function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues) {
     const ctxType = document.getElementById('chartTypes').getContext('2d');
     const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+    const ctxSentiment = document.getElementById('chartSentiment').getContext('2d');
 
     // Destroy old charts to prevent glitches
     if (typeChart) typeChart.destroy();
     if (statusChart) statusChart.destroy();
+    if (sentimentChart) sentimentChart.destroy();
 
     // Chart 1: Issue Types (Bar)
     typeChart = new Chart(ctxType, {
@@ -1051,6 +1089,41 @@ function renderCharts(tLabels, tValues, sLabels, sValues) {
         },
         options: { responsive: true }
     });
+
+    // Chart 3: Sentiment (Pie/Doughnut) - Only render if we have data
+    if (sentLabels.length > 0 && sentValues.length > 0) {
+        // Define colors: Green (Positive), Grey (Neutral), Red (Negative)
+        const sentimentColors = sentLabels.map(label => {
+            if (label.toLowerCase().includes('positive')) return '#27ae60'; // Green
+            if (label.toLowerCase().includes('negative') || label.toLowerCase().includes('urgent')) return '#e74c3c'; // Red
+            return '#95a5a6'; // Grey (default/neutral)
+        });
+
+        sentimentChart = new Chart(ctxSentiment, {
+            type: 'doughnut',
+            data: {
+                labels: sentLabels,
+                datasets: [{
+                    data: sentValues,
+                    backgroundColor: sentimentColors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 // ==========================================

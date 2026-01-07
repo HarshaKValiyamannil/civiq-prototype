@@ -14,7 +14,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
     <style>
     /* 1. Base Typography & Layout */
     body {
@@ -497,13 +496,8 @@
                                 <i class="fas fa-align-left"></i>
                                 Description:
                             </label>
-                            <div class="input-group">
-                                <textarea id="description" class="form-control" placeholder="Describe the issue..."></textarea>
-                                <button class="btn btn-outline-secondary" type="button" onclick="startAzureDictation()" title="Speak Description">
-                                    <i class="fas fa-microphone"></i>
-                                </button>
-                            </div>
-                            <small id="micStatus" class="text-muted"></small>
+                            <textarea id="description" class="form-control" placeholder="Describe the issue..."></textarea>
+                            <!-- Removed microphone button for speech-to-text -->
                         </div>
 
                         <div class="mb-3">

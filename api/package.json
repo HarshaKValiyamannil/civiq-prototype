@@ -2,19 +2,16 @@
   "name": "civiq-speech-token-api",
   "version": "1.0.0",
   "description": "Azure Function to securely provide speech tokens",
+  "main": "SpeechToken/index.js",
   "engines": {
-    "node": ">=16.x <=18.x"
+    "node": "18.x"
   },
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests specified\" && exit 0"
   },
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  },
-  "devDependencies": {
-    "azure-functions-core-tools": "^4.x"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "keywords": [
     "azure",
     "functions",

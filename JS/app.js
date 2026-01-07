@@ -961,9 +961,24 @@ function showAnalytics() {
     console.log("📊 Fetching analytics from Cloud...");
 
     fetch(ANALYTICS_LOGIC_APP_URL, { method: 'POST' })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         console.log("📊 Analytics Data:", data);
+
+        // Check if the cloud returned an error instead of data
+        if (data.error) {
+            throw new Error(data.error.message || "Server returned error response");
+        }
+
+        // Validate required data structure
+        if (!data.types || !data.status) {
+            throw new Error("Invalid data structure from cloud - missing types or status");
+        }
 
         // ROBUST DATA HANDLING
         // The Logic App returns { types: {...}, status: {...} }
@@ -972,6 +987,11 @@ function showAnalytics() {
         
         const rawTypes = data.types.Documents || data.types.value || data.types; 
         const rawStatus = data.status.Documents || data.status.value || data.status;
+
+        // Additional safety checks for data arrays
+        if (!Array.isArray(rawTypes) || !Array.isArray(rawStatus)) {
+            throw new Error("Expected array data but received invalid format");
+        }
 
         // Process Types Data
         const typeLabels = rawTypes.map(item => item.issueType || "Unknown");
@@ -992,7 +1012,7 @@ function showAnalytics() {
             window.appInsights.trackException({ exception: err });
         }
         
-        Swal.fire("Error", "Could not fetch stats from cloud.", "error");
+        Swal.fire("Error", `Could not fetch stats: ${err.message}`, "error");
     });
 }
 

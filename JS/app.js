@@ -1177,7 +1177,7 @@ function showAnalytics() {
 function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues, trendLabels, trendValues) {
     const ctxType = document.getElementById('chartTypes').getContext('2d');
     const ctxStatus = document.getElementById('chartStatus').getContext('2d');
-    const ctxSentiment = document.getElementById('chartSentiment').getContext('2d');
+    // const ctxSentiment = document.getElementById('chartSentiment').getContext('2d'); // REMOVED - No longer exists
     const ctxTrends = document.getElementById('chartTrends').getContext('2d');
 
     // Destroy old charts to prevent glitches

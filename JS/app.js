@@ -469,7 +469,8 @@ function renderReportList(reports) {
             '<div class="mb-3">' +
                 '<div class="d-flex align-items-center gap-2">' +
                     '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
-                    '<select class="form-select form-select-sm" style="width: auto;" onchange="handleTranslationDropdown(this, \'" + report.id + "\')">' +
+                    // Use backticks to properly escape the report ID in the onchange attribute
+                    '<select class="form-select form-select-sm" style="width: auto;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
                         '<option value="">Select language</option>' +
                         '<option value="es">Spanish 🇪🇸</option>' +
                         '<option value="fr">French 🇫🇷</option>' +
@@ -784,8 +785,10 @@ function handleTranslationDropdown(selectElement, reportId) {
     const card = selectElement.closest('.card');
     const descriptionElement = card.querySelector('p');
     
-    // CLEAN THE TEXT: Remove or escape tokens that might crash the browser controller
-    const originalText = descriptionElement.textContent.replace(/['"`]/g, " ").trim();
+    // --- ADD THIS LINE TO FIX THE 'TOKEN' ERROR ---
+    // This removes single quotes, double quotes, backticks, and newlines that break the browser's string handling
+    const originalText = descriptionElement.textContent.replace(/['"`\n\r]/g, " ").trim(); 
+    // ----------------------------------------------
     
     console.log("📄 Sanitized text for translation:", originalText);
     

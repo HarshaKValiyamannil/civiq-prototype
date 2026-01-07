@@ -967,27 +967,24 @@ function showAnalytics() {
         }
         return response.json();
     })
-    .then(data => {
-        console.log("📊 Analytics Data:", data);
+.then(data => {
+        console.log("📊 Analytics Data received:", data);
+
+        // 1. Safety check: Ensure the keys exist before accessing their properties
+        if (!data || !data.types || !data.status) {
+            console.error("❌ Cloud returned incomplete data:", data);
+            throw new Error("Analytics data is missing required sections (types/status).");
+        }
 
         // Check if the cloud returned an error instead of data
         if (data.error) {
             throw new Error(data.error.message || "Server returned error response");
         }
 
-        // Validate required data structure
-        if (!data.types || !data.status) {
-            throw new Error("Invalid data structure from cloud - missing types or status");
-        }
-
-        // ROBUST DATA HANDLING
-        // The Logic App returns { types: {...}, status: {...}, sentiment: {...} }
-        // We need to extract the array of items from inside those objects
-        // Usually Cosmos returns { "Documents": [...] } or { "value": [...] }
-        
-        const rawTypes = data.types.Documents || data.types.value || data.types; 
-        const rawStatus = data.status.Documents || data.status.value || data.status;
-        const rawSentiment = data.sentiment.Documents || data.sentiment.value || data.sentiment || [];
+        // 2. Safely extract arrays using Optional Chaining (?.)
+        const rawTypes = data.types?.Documents || data.types?.value || data.types || [];
+        const rawStatus = data.status?.Documents || data.status?.value || data.status || [];
+        const rawSentiment = data.sentiment?.Documents || data.sentiment?.value || data.sentiment || [];
 
         // Additional safety checks for data arrays
         if (!Array.isArray(rawTypes) || !Array.isArray(rawStatus)) {

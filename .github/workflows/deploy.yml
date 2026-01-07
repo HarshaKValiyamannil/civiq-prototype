@@ -1,0 +1,20 @@
+name: Deploy CiviQ to Azure Storage
+
+on:
+  push:
+    branches:
+      - main  # Triggered when you push to the main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout Github Action'
+      uses: actions/checkout@v3
+
+    - name: 'Deploy to Azure Storage'
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          # This command uploads only the contents of your project folder to the $web container
+          az storage blob upload-batch --account-name stciviqharsha --account-key ${{ secrets.AZURE_STORAGE_KEY }} --destination '$web' --source . --overwrite

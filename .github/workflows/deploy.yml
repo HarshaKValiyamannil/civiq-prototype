@@ -1,30 +1,34 @@
-name: Azure Static Web Apps CI/CD
+# This workflow deploys the CiviQ frontend to a static hosting service
+# The backend is handled by Azure Logic Apps
+
+name: Deploy CiviQ Frontend
 
 on:
   push:
     branches:
-      - main  # This must match your branch name exactly
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+  deploy:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          submodules: true
-      - name: Build And Deploy
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "/"          # Your index.html is in the root
-          api_location: ""           # No API folder anymore
-          output_location: ""        # No build step needed for plain JS
+          node-version: '18'
+
+      - name: Install dependencies (if any build process needed)
+        run: |
+          # If you add build tools later, put commands here
+          echo "No build needed for static site"
+
+      - name: Deploy to hosting service
+        run: |
+          # This is a placeholder - you would configure this based on your hosting choice
+          # Options: GitHub Pages, Azure Static Web Apps, Azure Storage, etc.
+          echo "Deploying static files to hosting service"
+          ls -la

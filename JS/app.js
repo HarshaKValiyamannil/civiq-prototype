@@ -1221,7 +1221,7 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
         },
         options: { 
             responsive: true, 
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: { 
                 legend: { display: false } 
             }
@@ -1240,7 +1240,7 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
         },
         options: { 
             responsive: true,
-            maintainAspectRatio: true
+            maintainAspectRatio: false
         }
     });
 

@@ -466,10 +466,16 @@ function renderReportList(reports) {
             '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
             '</div>' +
             '<p>' + report.description + '</p>' +
-            '<div class="mb-3 d-flex gap-2">' +
-                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'es\')">ES 🇪🇸</button>' +
-                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'fr\')">FR 🇫🇷</button>' +
-                '<button class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem;" onclick="translateReport(this, \'de\')">DE 🇩🇪</button>' +
+            '<div class="mb-3">' +
+                '<div class="d-flex align-items-center gap-2">' +
+                    '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
+                    '<select class="form-select form-select-sm" style="width: auto;" onchange="handleTranslationDropdown(this, \'" + report.id + "\')">' +
+                        '<option value="">Select language</option>' +
+                        '<option value="es">Spanish 🇪🇸</option>' +
+                        '<option value="fr">French 🇫🇷</option>' +
+                        '<option value="de">German 🇩🇪</option>' +
+                    '</select>' +
+                '</div>' +
             '</div>' +
             (report.aiCaption ? '<div class="ai-insight-box mb-2"><div class="ai-insight-title"><i class="fas fa-search"></i><span>AI Insight</span></div><div class="ai-insight-content">"' + report.aiCaption + '"</div></div>' : '') +
             '<div class="mt-auto">' +
@@ -759,6 +765,108 @@ function translateReport(btn, targetLang) {
     .finally(() => {
         // Re-enable all translation buttons
         translationButtons.forEach(button => button.disabled = false);
+    });
+}
+
+// New handler for translation dropdown
+function handleTranslationDropdown(selectElement, reportId) {
+    const selectedLang = selectElement.value;
+    
+    // If no language selected, do nothing
+    if (!selectedLang) return;
+    
+    console.log("🔍 Translation triggered:", { selectedLang, reportId });
+    
+    // Get the report description from the card
+    const card = selectElement.closest('.card');
+    const descriptionElement = card.querySelector('p');
+    const originalText = descriptionElement.textContent;
+    
+    console.log("📄 Original text:", originalText);
+    
+    // Disable the dropdown temporarily
+    selectElement.disabled = true;
+    const originalPlaceholder = selectElement.options[0].text;
+    selectElement.options[0].text = "Translating...";
+    
+    // Track translation event
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
+            name: "ReportTranslated",
+            properties: { 
+                targetLanguage: selectedLang,
+                originalLength: originalText.length
+            }
+        });
+    }
+    
+    // Call translation Logic App
+    console.log("🌐 Calling translation API:", TRANSLATE_URL);
+    fetch(TRANSLATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            text: originalText,
+            targetLanguage: selectedLang
+        })
+    })
+    .then(response => {
+        console.log("📥 Translation response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`Translation failed: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("📄 Translation response data:", data);
+        // Update the description with translated text
+        if (data.translatedText) {
+            descriptionElement.innerHTML = `<strong>[${selectedLang.toUpperCase()}]</strong> ${data.translatedText}`;
+            
+            console.log("✅ Translation successful, updated text:", descriptionElement.innerHTML);
+            
+            // Show success message
+            const Toast = Swal.mixin({
+                toast: true, 
+                position: 'top-end', 
+                showConfirmButton: false, 
+                timer: 3000
+            });
+            Toast.fire({ 
+                icon: 'success', 
+                title: `Translated to ${selectedLang.toUpperCase()}!` 
+            });
+            
+            // Reset dropdown to default
+            selectElement.value = "";
+        } else {
+            throw new Error("No translation returned");
+        }
+    })
+    .catch(error => {
+        console.error("❌ Translation error:", error);
+        
+        // Track the error
+        if (window.appInsights) {
+            window.appInsights.trackException({ exception: error });
+        }
+        
+        // Show error message
+        Swal.fire({
+            icon: 'error',
+            title: 'Translation Failed',
+            text: 'Could not translate the report. Please try again.',
+            confirmButtonColor: '#1abc9c'
+        });
+        
+        // Reset dropdown
+        selectElement.value = "";
+    })
+    .finally(() => {
+        // Re-enable the dropdown
+        selectElement.disabled = false;
+        selectElement.options[0].text = originalPlaceholder;
+        console.log("🔄 Translation process completed");
     });
 }
 

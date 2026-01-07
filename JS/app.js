@@ -143,9 +143,10 @@ function submitNewAsset() {
     const description = document.getElementById('description').value;
     const lat = document.getElementById('latitude').value;
     const long = document.getElementById('longitude').value;
-    const email = document.getElementById('userEmail').value; // Get the email
+    const email = document.getElementById('userEmail').value.trim(); // Get the email (optional)
     const fileInput = document.getElementById('imageFile');
 
+    // Validate required fields
     if (!lat || !long) {
         Swal.fire({
             icon: 'error',
@@ -155,6 +156,7 @@ function submitNewAsset() {
         });
         return;
     }
+    
     if(fileInput.files.length === 0) {
         Swal.fire({
             icon: 'error',
@@ -169,67 +171,73 @@ function submitNewAsset() {
 
     const file = fileInput.files[0];
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     
     reader.onload = function() {
-        const rawBase64 = reader.result.split(',')[1]; 
-        const payload = {
-            "description": description,
-            "issueType": issueType,
-            "latitude": lat,
-            "longitude": long,
-            "photoContent": rawBase64, 
-            "fileName": file.name,
-            "userEmail": email, // <--- ADD THIS
-            "status": "Open"    // <--- FORCE STATUS TO OPEN
-        };
-        
-        // AND... Don't forget to SAVE the time when they successfully submit!
-        // Add this line right before the fetch() call:
-        localStorage.setItem("civiq_last_submit", now);
-
-        fetch(SUBMIT_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        })
-        .then(async response => {
-            // 1. Try to read the error message from the cloud
-            let errorMsg = "Something went wrong.";
-            try {
-                const data = await response.json();
-                if (data.error) errorMsg = data.error;
-            } catch (e) {
-                console.log("No JSON error returned");
+        try {
+            const rawBase64 = reader.result.split(',')[1]; 
+            const payload = {
+                "description": description,
+                "issueType": issueType,
+                "latitude": lat,
+                "longitude": long,
+                "photoContent": rawBase64, 
+                "fileName": file.name,
+                "status": "Open"    // <--- FORCE STATUS TO OPEN
+            };
+            
+            // Add email only if provided
+            if (email) {
+                payload.userEmail = email;
             }
+            
+            fetch(SUBMIT_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
 
-            // 2. Handle the different Status Codes
-            if (response.ok) {
-                // SUCCESS (200)
-                document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
-                
-                // --- NEW: LOGICALLY CONNECTED MONITORING ---
-                if (window.appInsights) {
-                    window.appInsights.trackEvent({
-                        name: "ReportSubmitted",
-                        properties: { 
-                            issueType: issueType,      // e.g., "Pothole"
-                            hasImage: true             // Boolean flag
-                        }
-                    });
+            .then(async response => {
+                // Set submission timestamp only AFTER successful response
+                localStorage.setItem("civiq_last_submit", now);
+                        
+                // 1. Try to read the error message from the cloud
+                let errorMsg = "Something went wrong.";
+                try {
+                    const data = await response.json();
+                    if (data.error) errorMsg = data.error;
+                } catch (e) {
+                    console.log("No JSON error returned");
                 }
-                // -------------------------------------------
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Report Submitted!',
-                    text: 'Thank you for your contribution.',
-                    timer: 2000
-                }).then(() => {
-                    loadReports(); 
-                    document.getElementById('description').value = "";
-                    document.getElementById('imageFile').value = "";
-                });
+                        
+                // 2. Handle the different Status Codes
+                if (response.ok) {
+                    // SUCCESS (200)
+                    document.getElementById('statusMessage').innerHTML = '<i class="fas fa-check text-success"></i> Submitted!';
+                            
+                    // --- NEW: LOGICALLY CONNECTED MONITORING ---
+                    if (window.appInsights) {
+                        window.appInsights.trackEvent({
+                            name: "ReportSubmitted",
+                            properties: { 
+                                issueType: issueType,      // e.g., "Pothole"
+                                hasImage: true,            // Boolean flag
+                                hasEmail: !!email          // Whether email was provided
+                            }
+                        });
+                    }
+                    // -------------------------------------------
+                            
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Report Submitted!',
+                        text: 'Thank you for your contribution.',
+                        timer: 2000
+                    }).then(() => {
+                        loadReports(); 
+                        document.getElementById('description').value = "";
+                        document.getElementById('imageFile').value = "";
+                        // Don't clear email - user may want to use same email for multiple reports
+                    });
 
             } else if (response.status === 409) {
                 // DUPLICATE (409)
@@ -251,28 +259,41 @@ function submitNewAsset() {
                     confirmButtonColor: '#d33'
                 });
 
-            } else {
-                // GENERIC ERROR
-                document.getElementById('statusMessage').innerText = "Error!";
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Submission Failed',
-                    text: 'Something went wrong connecting to the cloud.',
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            
-            // --- NEW: TRACK EXCEPTION ---
-            if (window.appInsights) {
-                window.appInsights.trackException({ exception: error });
-            }
-            // ----------------------------
-            
-            Swal.fire('Network Error', 'Please check your internet connection.', 'error');
-        });
+                } else {
+                    // GENERIC ERROR
+                    document.getElementById('statusMessage').innerText = "Error!";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Submission Failed',
+                        text: `Error ${response.status}: Something went wrong connecting to the cloud.`,
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // --- NEW: TRACK EXCEPTION ---
+                if (window.appInsights) {
+                    window.appInsights.trackException({ exception: error });
+                }
+                // ----------------------------
+                
+                Swal.fire('Network Error', 'Please check your internet connection.', 'error');
+            });
+        } catch (readerError) {
+            console.error('FileReader Error:', readerError);
+            document.getElementById('statusMessage').innerHTML = '<i class="fas fa-times-circle text-danger"></i> File Error!';
+            Swal.fire('File Error', 'Could not process the selected image file.', 'error');
+        }
     };
+    
+    reader.onerror = function() {
+        console.error('FileReader failed to read file');
+        document.getElementById('statusMessage').innerHTML = '<i class="fas fa-times-circle text-danger"></i> File Read Error!';
+        Swal.fire('File Error', 'Failed to read the selected file. Please try another image.', 'error');
+    };
+    
+    reader.readAsDataURL(file);
 }
 
 // ==========================================

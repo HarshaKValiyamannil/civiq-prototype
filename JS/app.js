@@ -13,6 +13,8 @@ var allReports = []; // 'var' makes this accessible to the console for debugging
 // Chart variables
 let typeChart = null;
 let statusChart = null;
+let sentimentChart = null; // New
+let trendsChart = null;    // New
 
 // Pagination variables
 let currentPage = 1;

@@ -1056,11 +1056,13 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
     const ctxType = document.getElementById('chartTypes').getContext('2d');
     const ctxStatus = document.getElementById('chartStatus').getContext('2d');
     const ctxSentiment = document.getElementById('chartSentiment').getContext('2d');
+    const ctxTrends = document.getElementById('chartTrends').getContext('2d');
 
     // Destroy old charts to prevent glitches
     if (typeChart) typeChart.destroy();
     if (statusChart) statusChart.destroy();
     if (sentimentChart) sentimentChart.destroy();
+    if (trendsChart) trendsChart.destroy();
 
     // Chart 1: Issue Types (Bar)
     typeChart = new Chart(ctxType, {
@@ -1124,6 +1126,58 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
             }
         });
     }
+
+    // Chart 4: Trends (Line Chart)
+    // Sample trend data - in a real implementation, this would come from the backend
+    const trendLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const trendData = [12, 19, 15, 17, 22, 25]; // Sample report counts over time
+    
+    trendsChart = new Chart(ctxTrends, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Monthly Reports',
+                data: trendData,
+                borderColor: '#e67e22', // Primary city brand color
+                backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                borderWidth: 3,
+                tension: 0.4, // Smooth curves
+                fill: true,
+                pointBackgroundColor: '#e67e22',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
 }
 
 // ==========================================

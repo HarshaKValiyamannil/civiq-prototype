@@ -7,6 +7,7 @@
 
 
 let map; // Global variable for the map
+let tempMarker; // Global variable for temporary address search marker
 var allReports = []; // 'var' makes this accessible to the console for debugging!
 
 // new change edit
@@ -555,6 +556,9 @@ function searchAddress() {
     }
     
     const statusMessage = document.getElementById('statusMessage');
+    // Clear any previous messages first
+    statusMessage.innerHTML = '';
+    // Show searching indicator
     statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching for address...';
     
     // Improved geocoding with better error handling
@@ -579,7 +583,11 @@ function searchAddress() {
             document.getElementById('latitude').value = result.lat;
             document.getElementById('longitude').value = result.lon;
             
+            // Show success message and clear it after 5 seconds
             statusMessage.innerHTML = `<i class="fas fa-check-circle text-success"></i> Found: ${result.display_name.substring(0, 60)}${result.display_name.length > 60 ? '...' : ''}`;
+            setTimeout(() => {
+                statusMessage.innerHTML = '';
+            }, 5000);
             
             // Update map view
             if (map) {
@@ -600,6 +608,9 @@ function searchAddress() {
             }
         } else {
             statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> No results found. Try a more specific address.';
+            setTimeout(() => {
+                statusMessage.innerHTML = '';
+            }, 5000);
             
             Swal.fire({
                 icon: 'info',
@@ -612,6 +623,9 @@ function searchAddress() {
     .catch(error => {
         console.error('Geocoding error:', error);
         statusMessage.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Search failed. Please try again.';
+        setTimeout(() => {
+            statusMessage.innerHTML = '';
+        }, 5000);
         
         Swal.fire({
             icon: 'error',

@@ -334,96 +334,41 @@ function renderSkeletonLoader() {
 }
 
 function loadReports() {
-    console.log("🔄 Loading reports...");
+    console.log("🔄 Loading reports from Cloud...");
     
-    // Get the list container
-    const listDiv = document.getElementById('reportsList');
-    
-    // Show skeleton loader immediately
-    renderSkeletonLoader();
+    // 1. Grab current UI values
+    const keyword = document.getElementById('cloudSearchInput').value || "";
+    const type = document.getElementById('typeFilter').value || "All";
+    const status = document.getElementById('statusFilter').value || "All";
+    const sort = document.getElementById('sortBy').value === 'oldest' ? 'ASC' : 'DESC';
 
-    // ADD 'return' HERE
-    return fetch(VIEW_URL)
+    // 2. Construct URL with query parameters
+    const finalUrl = `${UNIFIED_SEARCH_URL}&keyword=${encodeURIComponent(keyword)}&type=${type}&status=${status}&sort=${sort}`;
+    
+    const listDiv = document.getElementById('reportsList');
+    listDiv.innerHTML = renderSkeletonLoader(); // Show loading state
+
+    return fetch(finalUrl)
     .then(response => response.json())
     .then(data => {
-        console.log("📦 Data received:", data);
-        listDiv.innerHTML = ""; 
+        const items = data.Documents || data.value || data; 
         
-        // CHECK ALL CASINGS: Capital 'Documents', lowercase 'documents', 'value', or root array
-        const items = data.Documents || data.documents || data.value || data; 
-
-        // CRITICAL SAFETY CHECK: Ensure we actually have a LIST (Array)
         if (!Array.isArray(items)) {
-            console.error("❌ Data format error. Expected a list but got:", items);
-            listDiv.innerHTML = "<p>Error: Could not read reports list.</p>";
+            listDiv.innerHTML = "<p>Error: Could not read reports.</p>";
             return;
         }
 
-        if (items.length === 0) {
-            listDiv.innerHTML = "<p>No reports found.</p>";
-            return;
-        }
-
-        // Store to global variable
-        allReports = items;
-        console.log(`✅ Loaded ${allReports.length} reports.`);
-
-        // Apply filters
-        filterReports();
+        allReports = items; // Update global state
+        
+        // Refresh Map and List with the NEW cloud-sorted data
+        if (map) { map.remove(); map = null; }
+        initMap(allReports);
+        renderReportList(allReports);
     })
     .catch(error => {
-        console.error('❌ Load Error:', error);
+        console.error('❌ Cloud Error:', error);
         listDiv.innerText = "Failed to load reports.";
-        // Ensure the error propagates so .catch() in syncAndShowAnalytics works
-        throw error; 
     });
-}
-
-// ==========================================
-// 5. FILTER REPORTS (FIXED)
-// ==========================================
-function filterReports() {
-    currentPage = 1; 
-    
-    // SAFE ELEMENTS FETCHING
-    const typeEl = document.getElementById('typeFilter');
-    const statusEl = document.getElementById('statusFilter');
-    const sentimentEl = document.getElementById('sentimentFilter'); // This is missing in your HTML
-
-    // If element exists, get value. If not, default to 'All'
-    const typeFilter = typeEl ? typeEl.value : 'All';
-    const statusFilter = statusEl ? statusEl.value : 'All';
-    const sentimentFilter = sentimentEl ? sentimentEl.value : 'All'; 
-    
-    console.log(`🚀 Filtering: Type=${typeFilter}, Sentiment=${sentimentFilter}, Status=${statusFilter}`);
-
-    let filteredReports = allReports.filter(report => {
-        // 1. Filter Type
-        if (typeFilter !== 'All' && report.issueType !== typeFilter) return false;
-
-        // 2. Filter Status (NEW)
-        // If status is NOT 'All', and report status doesn't match, hide it.
-        // (We treat undefined status as 'Open')
-        const rStatus = report.status || 'Open'; 
-        if (statusFilter !== 'All' && rStatus !== statusFilter) return false;
-
-        // 3. Filter Sentiment
-        if (sentimentFilter !== 'All') {
-            const sentimentText = getSentimentText(report); // Use helper
-            const cleanValue = sentimentText.toLowerCase().trim();
-            const cleanFilter = sentimentFilter.toLowerCase().trim();
-            
-            // Debug log to confirm it works
-            // console.log(`Comparing: '${cleanValue}' vs '${cleanFilter}'`);
-            
-            return cleanValue === cleanFilter;
-        }
-        return true;
-    });
-
-    if (map) { map.remove(); map = null; }
-    initMap(filteredReports);
-    renderReportList(filteredReports);
 }
 
 // ==========================================
@@ -498,9 +443,9 @@ function renderReportList(reports) {
         if (isAdmin && report.status !== "Resolved") {
             adminControls = '<button class="btn btn-success btn-sm flex-fill" onclick="resolveIssue(\'' + report.id + '\')" style="margin-right: 8px;"><i class="fas fa-check-circle me-1"></i> Resolve</button>';
         } 
-        // If report is already resolved, show a label instead
-        else if (report.status === "Resolved") {
-            adminControls = '<div class="text-success border border-success rounded px-2 py-1" style="font-size: 0.75rem; background: #d4edda; flex-shrink: 0;"><i class="fas fa-check"></i></div>';
+        // If user is Admin AND report is already resolved, show a disabled resolved button
+        else if (isAdmin && report.status === "Resolved") {
+            adminControls = '<button class="btn btn-success btn-sm flex-fill" style="margin-right: 8px; background-color: #d4edda; border-color: #c3e6cb; color: #155724; cursor: default; font-weight: 500;" disabled><i class="fas fa-check-circle me-1"></i> Resolved</button>';
         }
 
         const cardCol = document.createElement('div');
@@ -1660,9 +1605,8 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
 // ==========================================
 
 // 1. CONFIGURE URL
-// Paste your Logic App URL here, but replace the specific keyword part with 'REPLACE_ME'
-// Example: .../invoke/search/REPLACE_ME?api-version=...
-const SEARCH_URL_TEMPLATE = "https://prod-61.uksouth.logic.azure.com/workflows/3d29e41323864026903f8dc9658f9751/triggers/When_an_HTTP_request_is_received/paths/invoke/search/REPLACE_ME?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=4ARJUjp84QKY3ZxeNFDiu_4sCcGXUoWwlJB5lrmMZq0"; 
+// Unified Logic App endpoint for all report operations
+const UNIFIED_SEARCH_URL = "https://prod-59.uksouth.logic.azure.com:443/workflows/a1558e4931334e8687b86bc2b12ff4ab/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=2kr2jX9a3poZQ374E0wwMXwhQ3YPuKJip30K-mRiv7c"; 
 
 function searchReportsCloud() {
     const keyword = document.getElementById('cloudSearchInput').value.trim();
@@ -1689,15 +1633,11 @@ function searchReportsCloud() {
     // Show loading state
     listDiv.innerHTML = renderSkeletonLoader(); 
 
-    // Construct the URL dynamically
-    // If your Azure URL is: .../invoke/search/{keyword}?api...
-    // You might need to manually construct it:
-    // const baseUrl = "https://prod-XX.uksouth.logic.azure.com.../invoke/search/";
-    // const queryParams = "?api-version=2016-10-01&sp=...";
-    // const finalUrl = baseUrl + encodeURIComponent(keyword) + queryParams;
+    // Construct the URL with query parameters
+    // The unified endpoint accepts: keyword, type, status, sort (ASC/DESC)
 
-    // SIMPLER METHOD (If you paste the full URL with 'REPLACE_ME' above):
-    const finalUrl = SEARCH_URL_TEMPLATE.replace("REPLACE_ME", encodeURIComponent(keyword));
+    // Use unified endpoint with query parameters
+    const finalUrl = `${UNIFIED_SEARCH_URL}&keyword=${encodeURIComponent(keyword)}`;
 
     fetch(finalUrl)
     .then(response => response.json())

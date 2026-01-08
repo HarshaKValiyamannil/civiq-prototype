@@ -736,20 +736,20 @@
                         
                         <div class="p-4">
                         <!-- Filter Bar -->
-                        <div id="filter-bar" class="row g-2 align-items-center mb-4 p-3 bg-light rounded">
+                        <div id="filter-bar" class="d-flex flex-wrap align-items-center gap-3 mb-4 pb-3" style="border-bottom: 2px solid #e9ecef;">
                             
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
+                            <div class="d-flex align-items-center">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white">
                                         <i class="fas fa-search text-primary"></i>
                                     </span>
-                                    <input type="text" id="cloudSearchInput" class="form-control border-start-0 ps-0" placeholder="Search (e.g. 'School', 'Fire')...">
-                                    <button class="btn btn-primary" type="button" onclick="searchReportsCloud()">Search</button>
+                                    <input type="text" id="cloudSearchInput" class="form-control" placeholder="Search reports..." style="width: 200px;">
+                                    <button class="btn btn-primary" type="button" onclick="searchReportsCloud()">Go</button>
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
-                                <select id="typeFilter" class="form-select" onchange="filterReports()">
+                            <div class="d-flex align-items-center">
+                                <select id="typeFilter" class="form-select form-select-sm" onchange="loadReports()" style="width: 150px;">
                                     <option value="All">All Types</option>
                                     <option value="Pothole">Potholes</option>
                                     <option value="Streetlight">Streetlights</option>
@@ -757,25 +757,27 @@
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <select id="statusFilter" class="form-select" onchange="filterReports()">
+                            <div class="d-flex align-items-center">
+                                <select id="statusFilter" class="form-select form-select-sm" onchange="loadReports()" style="width: 150px;">
                                     <option value="All">All Statuses</option>
                                     <option value="Open">Active Issues</option>
                                     <option value="Resolved">Resolved</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <select id="sentimentFilter" class="form-select" onchange="filterReports()">
-                                    <option value="All">All Sentiments</option>
-                                    <option value="Positive">Positive</option>
-                                    <option value="Neutral">Neutral</option>
-                                    <option value="Negative">Urgent/Negative</option>
+                            <!-- Sentiment filter removed - now handled by cloud-powered filtering -->
+                            
+                            <div class="d-flex align-items-center">
+                                <select id="sortBy" class="form-select form-select-sm" onchange="loadReports()" style="width: 130px;">
+                                    <option value="newest">Newest</option>
+                                    <option value="oldest">Oldest</option>
+                                    <option value="mostVotes">Most Votes</option>
+                                    <option value="leastVotes">Least Votes</option>
                                 </select>
                             </div>
 
-                            <div class="col-md-2 d-grid">
-                                 <button onclick="loadReports()" class="btn btn-outline-secondary" title="Reset Search">
-                                     <i class="fas fa-undo"></i> Reset
+                            <div class="d-flex align-items-center ms-auto">
+                                 <button onclick="loadReports()" class="btn btn-outline-secondary btn-sm" title="Reset All Filters">
+                                     <i class="fas fa-undo me-1"></i>Reset
                                  </button>
                             </div>
                         </div>

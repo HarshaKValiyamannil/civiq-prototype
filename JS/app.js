@@ -301,6 +301,22 @@ function loadReports() {
     const type = document.getElementById('typeFilter').value || "All";
     const status = document.getElementById('statusFilter').value || "All";
     const sort = document.getElementById('sortBy').value === 'oldest' ? 'ASC' : 'DESC';
+    
+    // Track filter usage (avoid tracking on initial load)
+    if (allReports.length > 0) {
+        if (window.appInsights) {
+            window.appInsights.trackEvent({
+                name: "ReportsFiltered",
+                properties: { 
+                    keyword: keyword || "none",
+                    type: type,
+                    status: status,
+                    sortBy: sort,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        }
+    }
 
     // 2. Construct URL with query parameters
     const finalUrl = `${UNIFIED_SEARCH_URL}&keyword=${encodeURIComponent(keyword)}&type=${type}&status=${status}&sort=${sort}`;
@@ -600,8 +616,51 @@ function getLocation() {
         navigator.geolocation.getCurrentPosition(p => {
             document.getElementById('latitude').value = p.coords.latitude;
             document.getElementById('longitude').value = p.coords.longitude;
+            
+            // Track successful geolocation usage
+            if (window.appInsights) {
+                window.appInsights.trackEvent({
+                    name: "GeolocationUsed",
+                    properties: { 
+                        latitude: p.coords.latitude,
+                        longitude: p.coords.longitude,
+                        accuracy: p.coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            }
+        }, (error) => {
+            // Track geolocation errors
+            if (window.appInsights) {
+                window.appInsights.trackEvent({
+                    name: "GeolocationError",
+                    properties: { 
+                        errorCode: error.code,
+                        errorMessage: error.message,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            }
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Geolocation Error',
+                text: 'Unable to get your location. Please enter coordinates manually.',
+                confirmButtonColor: '#1abc9c'
+            });
         });
     } else { 
+        // Track unsupported geolocation
+        if (window.appInsights) {
+            window.appInsights.trackEvent({
+                name: "GeolocationUnsupported",
+                properties: { 
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        }
+        
         Swal.fire({
             icon: 'error',
             title: 'Geolocation Not Supported',
@@ -806,6 +865,16 @@ function checkAuth() {
     const user = localStorage.getItem("civiq_user");
     if (user) {
         showLoggedInState(user);
+        // Track user login state
+        if (window.appInsights) {
+            window.appInsights.trackEvent({
+                name: "UserSessionStarted",
+                properties: { 
+                    userId: user,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        }
     } else {
         showLoggedOutState();
     }
@@ -1199,6 +1268,18 @@ function changePage(newPage) {
 // 11. MAP NAVIGATION HELPER
 // ==========================================
 function jumpToMap(lat, lon) {
+    // Track map navigation event
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
+            name: "MapLocationViewed",
+            properties: { 
+                latitude: lat,
+                longitude: lon,
+                action: "modal_navigation"
+            }
+        });
+    }
+    
     // 1. Close the Modal
     const modalEl = document.getElementById('reportModal');
     const modal = bootstrap.Modal.getInstance(modalEl);

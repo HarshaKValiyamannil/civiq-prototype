@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**'
+      - 'JS/**'
+      - 'CSS/**'
 
 jobs:
   build-and-deploy:
@@ -20,11 +24,13 @@ jobs:
       uses: azure/CLI@v1
       with:
         inlineScript: |
-          # If the 'List Files' step shows index.html is at the root, use '.'
-          # If it shows index.html is inside CiviQ_Project, use './CiviQ_Project'
+          # Deploy only static files - no build required
           az storage blob upload-batch \
             --account-name stciviqharsha \
             --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
             --destination '$web' \
             --source . \
             --overwrite
+        skip_app_build: true
+        skip_api_build: true
+        api_location: ""

@@ -319,7 +319,7 @@ function loadReports() {
     }
 
     // 2. Construct URL with query parameters
-    const finalUrl = `${UNIFIED_SEARCH_URL}&keyword=${encodeURIComponent(keyword)}&type=${type}&status=${status}&sort=${sort}`;
+    const finalUrl = `${FILTER_SORT_URL}&keyword=${encodeURIComponent(keyword)}&type=${type}&status=${status}&sort=${sort}`;
     
     const listDiv = document.getElementById('reportsList');
     listDiv.innerHTML = renderSkeletonLoader(); // Show loading state
@@ -1574,7 +1574,11 @@ function renderCharts(tLabels, tValues, sLabels, sValues, sentLabels, sentValues
 
 // 1. CONFIGURE URL
 // Unified Logic App endpoint for all report operations
-const UNIFIED_SEARCH_URL = "https://prod-59.uksouth.logic.azure.com:443/workflows/a1558e4931334e8687b86bc2b12ff4ab/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=2kr2jX9a3poZQ374E0wwMXwhQ3YPuKJip30K-mRiv7c"; 
+// Unified Logic App endpoint for filtering and sorting operations
+const FILTER_SORT_URL = "https://prod-59.uksouth.logic.azure.com:443/workflows/a1558e4931334e8687b86bc2b12ff4ab/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=2kr2jX9a3poZQ374E0wwMXwhQ3YPuKJip30K-mRiv7c";
+
+// Dedicated search Logic App endpoint for keyword/tag searching
+const SEARCH_LOGIC_APP_URL = "https://prod-61.uksouth.logic.azure.com:443/workflows/3d29e41323864026903f8dc9658f9751/triggers/When_an_HTTP_request_is_received/paths/invoke/search/"; 
 
 function searchReportsCloud() {
     const keyword = document.getElementById('cloudSearchInput').value.trim();
@@ -1604,8 +1608,9 @@ function searchReportsCloud() {
     // Construct the URL with query parameters
     // The unified endpoint accepts: keyword, type, status, sort (ASC/DESC)
 
-    // Use unified endpoint with query parameters
-    const finalUrl = `${UNIFIED_SEARCH_URL}&keyword=${encodeURIComponent(keyword)}`;
+    // Use dedicated search endpoint with keyword in path
+    const encodedKeyword = encodeURIComponent(keyword);
+    const finalUrl = `${SEARCH_LOGIC_APP_URL}${encodedKeyword}?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=4ARJUjp84QKY3ZxeNFDiu_4sCcGXUoWwlJB5lrmMZq0`;
 
     fetch(finalUrl)
     .then(response => response.json())
@@ -1644,4 +1649,28 @@ function searchReportsCloud() {
         
         listDiv.innerHTML = "<p class='text-danger text-center'>Search failed. Check console.</p>";
     });
+}
+
+// Reset all filters and search input
+function resetAllFilters() {
+    // Clear search input
+    document.getElementById('cloudSearchInput').value = '';
+    
+    // Reset filter dropdowns to default values
+    document.getElementById('typeFilter').value = 'All';
+    document.getElementById('statusFilter').value = 'All';
+    document.getElementById('sortBy').value = 'newest';
+    
+    // Reload reports with default settings
+    loadReports();
+    
+    // Track reset action
+    if (window.appInsights) {
+        window.appInsights.trackEvent({
+            name: "FiltersReset",
+            properties: { 
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
 }

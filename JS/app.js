@@ -308,7 +308,7 @@ function renderSkeletonLoader() {
         const skeletonCard = document.createElement('div');
         skeletonCard.className = 'col-md-6 col-lg-4 mb-4';
         skeletonCard.innerHTML = `
-            <div class="card h-100 shadow-sm" style="border: 2px solid #e67e22;">
+            <div class="card h-100 shadow-sm">
                 <div class="placeholder-glow">
                     <div class="placeholder" style="height: 200px; background-color: #e0e0e0;"></div>
                 </div>
@@ -335,6 +335,9 @@ function renderSkeletonLoader() {
 
 function loadReports() {
     console.log("🔄 Loading reports...");
+    
+    // Get the list container
+    const listDiv = document.getElementById('reportsList');
     
     // Show skeleton loader immediately
     renderSkeletonLoader();
@@ -505,7 +508,7 @@ function renderReportList(reports) {
         
         // Build HTML content with proper variable substitution using string concatenation
         cardCol.innerHTML = 
-            '<div class="card h-100 shadow-sm" style="cursor: pointer; border: 2px solid #e67e22; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-5px)\'; this.style.boxShadow=\'0 8px 20px rgba(230, 126, 34, 0.3)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 1px 3px rgba(0,0,0,0.12)\'">' +
+            '<div class="card h-100 shadow-sm" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-5px)\'; this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.15)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 1px 3px rgba(0,0,0,0.12)\'">' +
             '<img src="' + report.imageUrl + '" class="card-img-top" style="cursor: pointer; height: 200px; object-fit: cover; transition: transform 0.3s;" onclick="openReportModal(\'' + report.id + '\')" onerror="this.style.display=\'none\'" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
             '<div class="card-body d-flex flex-column" style="padding-bottom: 0;">' +
             '<div class="d-flex justify-content-between align-items-start mb-2">' +

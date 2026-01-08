@@ -299,12 +299,45 @@ function submitNewAsset() {
 // ==========================================
 // 3. VIEW REPORTS LOGIC (Robust Version)
 // ==========================================
+function renderSkeletonLoader() {
+    const listDiv = document.getElementById('reportsList');
+    listDiv.innerHTML = '';
+    
+    // Create 3 skeleton cards
+    for (let i = 0; i < 3; i++) {
+        const skeletonCard = document.createElement('div');
+        skeletonCard.className = 'col-md-6 col-lg-4 mb-4';
+        skeletonCard.innerHTML = `
+            <div class="card h-100 shadow-sm" style="border: 2px solid #e67e22;">
+                <div class="placeholder-glow">
+                    <div class="placeholder" style="height: 200px; background-color: #e0e0e0;"></div>
+                </div>
+                <div class="card-body">
+                    <div class="placeholder-glow">
+                        <span class="placeholder col-8 mb-2" style="height: 1.5rem;"></span>
+                        <span class="placeholder col-4 mb-3" style="height: 1rem;"></span>
+                        <span class="placeholder col-12 mb-2" style="height: 0.9rem;"></span>
+                        <span class="placeholder col-10 mb-2" style="height: 0.9rem;"></span>
+                        <span class="placeholder col-9" style="height: 0.9rem;"></span>
+                    </div>
+                </div>
+                <div class="p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22;">
+                    <div class="placeholder-glow d-flex justify-content-end gap-2">
+                        <span class="placeholder" style="width: 100px; height: 32px;"></span>
+                        <span class="placeholder" style="width: 100px; height: 32px;"></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        listDiv.appendChild(skeletonCard);
+    }
+}
+
 function loadReports() {
     console.log("🔄 Loading reports...");
-    const listDiv = document.getElementById('reportsList');
     
     // Show skeleton loader immediately
-    listDiv.innerHTML = renderSkeletonLoader();
+    renderSkeletonLoader();
 
     // ADD 'return' HERE
     return fetch(VIEW_URL)
@@ -406,7 +439,20 @@ function renderReportList(reports) {
     listDiv.innerHTML = "";
 
     if (reports.length === 0) {
-        listDiv.innerHTML = "<p class='p-3'>No reports match filters.</p>";
+        listDiv.innerHTML = `
+            <div class="col-12">
+                <div class="card border-0 shadow-sm text-center p-5" style="border: 2px solid #e67e22 !important;">
+                    <div class="card-body">
+                        <i class="fas fa-search fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                        <h4 class="text-muted mb-3">No Reports Found</h4>
+                        <p class="text-muted mb-4">We couldn't find any reports matching your filters.</p>
+                        <button onclick="loadReports()" class="btn btn-primary" style="background-color: #e67e22; border-color: #e67e22;">
+                            <i class="fas fa-redo me-2"></i>Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
         document.getElementById('paginationControls').innerHTML = ""; // Hide buttons
         return;
     }
@@ -438,8 +484,9 @@ function renderReportList(reports) {
             sentimentIndicator = `<span class="badge-urgent ms-2">urgent</span>`;
         }
 
-        // Support/Upvote Button
-        const voteButton = '<div class="d-flex align-items-center gap-2"><span class="badge bg-light text-dark border rounded-pill px-3 py-2" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-arrow-up text-primary me-1"></i>' + (report.votes || 0) + ' upvotes</span><button class="btn btn-outline-primary btn-sm" onclick="upvoteReport(\'' + report.id + '\', \'' + report.issueType + '\', this)"><i class="fas fa-thumbs-up"></i> Support</button></div>';
+        // Support/Upvote Button for bottom bar - Uniform design
+        const voteButton = '<div class="btn btn-sm d-flex align-items-center gap-2" style="background-color: #ffffff; border: 1px solid #dee2e6; cursor: default; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-arrow-up text-success"></i><span style="color: #2c3e50;">' + (report.votes || 0) + ' upvotes</span></div>';
+        const supportButton = '<button class="btn btn-primary btn-sm d-flex align-items-center gap-2" onclick="upvoteReport(\'' + report.id + '\', \'' + report.issueType + '\', this)" style="background-color: #007bff; border-color: #007bff; font-weight: 500;"><i class="fas fa-thumbs-up"></i><span>Support</span></button>';
 
         // 2. ADMIN ONLY BUTTON
         let adminControls = "";
@@ -458,14 +505,18 @@ function renderReportList(reports) {
         
         // Build HTML content with proper variable substitution using string concatenation
         cardCol.innerHTML = 
-            '<div class="card h-100 shadow-sm" style="cursor: pointer;">' +
-            '<img src="' + report.imageUrl + '" class="card-img-top" style="cursor: pointer; height: 200px; object-fit: cover;" onclick="openReportModal(\'' + report.id + '\')" onerror="this.style.display=\'none\'">' +
-            '<div class="card-body d-flex flex-column">' +
-            '<div class="d-flex justify-content-between">' +
-            '<h5 style="cursor: pointer; display: flex; align-items: center;" onclick="openReportModal(\'' + report.id + '\')">' + report.issueType + (displaySentiment.toLowerCase().trim() === "negative" ? ' <span class="badge-urgent ms-2">urgent</span>' : '') + '</h5>' +
+            '<div class="card h-100 shadow-sm" style="cursor: pointer; border: 2px solid #e67e22; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-5px)\'; this.style.boxShadow=\'0 8px 20px rgba(230, 126, 34, 0.3)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 1px 3px rgba(0,0,0,0.12)\'">' +
+            '<img src="' + report.imageUrl + '" class="card-img-top" style="cursor: pointer; height: 200px; object-fit: cover; transition: transform 0.3s;" onclick="openReportModal(\'' + report.id + '\')" onerror="this.style.display=\'none\'" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
+            '<div class="card-body d-flex flex-column" style="padding-bottom: 0;">' +
+            '<div class="d-flex justify-content-between align-items-start mb-2">' +
+            '<h5 style="cursor: pointer; display: flex; align-items: center; margin: 0; font-size: 1.1rem; font-weight: 600; color: #2c3e50;" onclick="openReportModal(\'' + report.id + '\')">' + report.issueType + (displaySentiment.toLowerCase().trim() === "negative" ? ' <span class="badge-urgent ms-2">urgent</span>' : '') + '</h5>' +
+            '<span class="' + (reportStatus === 'Resolved' ? 'badge bg-success' : 'badge bg-primary') + '" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">' + reportStatus + '</span>' +
+            '</div>' +
+            '<div class="d-flex align-items-center mb-2" style="font-size: 0.8rem; color: #6c757d;">' +
+            '<i class="fas fa-clock me-1"></i>' +
             '<small>' + (report.timestamp ? new Date(report.timestamp).toLocaleDateString() : '') + '</small>' +
             '</div>' +
-            '<p>' + report.description + '</p>' +
+            '<p style="margin-bottom: 0.75rem; color: #495057; line-height: 1.5;">' + report.description + '</p>' +
             '<div class="mb-3">' +
                 '<div class="d-flex align-items-center gap-2">' +
                     '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
@@ -483,11 +534,14 @@ function renderReportList(reports) {
                     '</select>' +
                 '</div>' +
             '</div>' +
-            (report.aiCaption ? '<div class="ai-insight-box mb-2"><div class="ai-insight-title"><i class="fas fa-search"></i><span>AI Insight</span></div><div class="ai-insight-content">"' + report.aiCaption + '"</div></div>' : '') +
             '<div class="mt-auto">' +
-            '<div class="d-flex gap-2 align-items-center">' + voteButton + '</div>' +
             adminControls +
             '</div>' +
+            '</div>' +
+            // Clean bottom bar with orange top border accent
+            '<div class="d-flex justify-content-end align-items-center gap-2 p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22; border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;">' +
+            voteButton +
+            supportButton +
             '</div>' +
             '</div>';
         listDiv.appendChild(cardCol);
@@ -663,11 +717,11 @@ function upvoteReport(docId, issueType, btn) {
                 allReports[reportIndex].votes = data.newVoteCount;
             }
 
-            // 2. Immediate UI Update: Find the badge next to this specific button and update its text
-            // In your renderReportList, the badge is the previous sibling of the button's parent or within the same container
-            const voteBadge = btn.parentElement.querySelector('.badge');
-            if (voteBadge) {
-                voteBadge.innerHTML = `<i class="fas fa-arrow-up text-primary me-1"></i>${data.newVoteCount} upvotes`;
+            // 2. Immediate UI Update: Find the vote display in the bottom bar
+            // The vote button is a sibling element (previous sibling of the Support button)
+            const voteDisplay = btn.previousElementSibling?.querySelector('span');
+            if (voteDisplay) {
+                voteDisplay.textContent = `${data.newVoteCount} upvotes`;
             }
 
             // 3. Optional: Re-render the whole list to keep everything in sync
@@ -987,6 +1041,76 @@ function openReportModal(reportId) {
     document.getElementById('modalType').innerText = report.issueType;
     document.getElementById('modalDesc').innerText = report.description;
     document.getElementById('modalLocation').innerText = `${report.location.lat}, ${report.location.lon}`;
+    
+    // Populate AI Insight if available
+    const aiInsightBox = document.getElementById('modalAiInsight');
+    const aiCaptionElement = document.getElementById('modalAiCaption');
+    if (report.aiCaption) {
+        aiCaptionElement.textContent = `"${report.aiCaption}"`;
+        aiInsightBox.style.display = 'block';
+    } else {
+        aiInsightBox.style.display = 'none';
+    }
+    
+    // Populate AI Tags if available
+    const tagsContainer = document.getElementById('modalTags');
+    const tagsSection = document.getElementById('modalTagsSection');
+    
+    console.log('🏷️ Raw aiTags:', report.aiTags);
+    console.log('🏷️ aiTags type:', typeof report.aiTags);
+    console.log('🏷️ Is array?', Array.isArray(report.aiTags));
+    
+    if (report.aiTags && report.aiTags.length > 0) {
+        let tagNames = [];
+        
+        // Handle different tag formats
+        if (typeof report.aiTags === 'string') {
+            try {
+                // Try parsing as JSON first
+                const parsed = JSON.parse(report.aiTags);
+                if (Array.isArray(parsed)) {
+                    tagNames = parsed.map(tag => {
+                        if (typeof tag === 'object' && tag.name) {
+                            return tag.name;
+                        }
+                        return tag;
+                    }).filter(tag => tag);
+                }
+            } catch (e) {
+                // Not JSON, treat as comma-separated string
+                tagNames = report.aiTags.split(',').map(tag => {
+                    return tag.split(':')[0].trim();
+                });
+            }
+        } else if (Array.isArray(report.aiTags)) {
+            // Array format: could be strings or objects
+            tagNames = report.aiTags.map(tag => {
+                if (typeof tag === 'string') {
+                    // String in array: "road:0.95" or "road"
+                    return tag.split(':')[0].trim();
+                } else if (typeof tag === 'object' && tag !== null && tag.name) {
+                    // Object format: {name: "road", confidence: 0.95}
+                    console.log('📌 Extracting tag name:', tag.name);
+                    return tag.name;
+                }
+                return null;
+            }).filter(tag => tag); // Remove null/empty tags
+        }
+        
+        console.log('✅ Extracted tag names:', tagNames);
+        
+        // Display tags if we have any
+        if (tagNames.length > 0) {
+            tagsContainer.innerHTML = tagNames.map(tag => 
+                `<span class="badge bg-primary" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.75rem;">${tag}</span>`
+            ).join('');
+            tagsSection.style.display = 'block';
+        } else {
+            tagsSection.style.display = 'none';
+        }
+    } else {
+        tagsSection.style.display = 'none';
+    }
     
     // --- NEW: SETUP VIEW ON MAP BUTTON ---
     const mapBtn = document.getElementById('btnViewOnMap');

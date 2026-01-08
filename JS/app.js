@@ -65,14 +65,6 @@ function renderSkeletonLoader() {
     return skeletonCards.join('');
 }
 
-// Helper: Determine marker color
-function getMarkerColor(sentiment) {
-    const s = (sentiment || "").toString().toLowerCase().trim();
-    if (s === 'negative') return 'red';
-    if (s === 'positive') return 'green';
-    return 'blue';
-}
-
 // HELPER: Smartly extract sentiment from ANY format
 function getSentimentText(report) {
     // 1. Check ALL possible casing variations
@@ -300,39 +292,6 @@ function submitNewAsset() {
 // ==========================================
 // 3. VIEW REPORTS LOGIC (Robust Version)
 // ==========================================
-function renderSkeletonLoader() {
-    const listDiv = document.getElementById('reportsList');
-    listDiv.innerHTML = '';
-    
-    // Create 3 skeleton cards
-    for (let i = 0; i < 3; i++) {
-        const skeletonCard = document.createElement('div');
-        skeletonCard.className = 'col-md-6 col-lg-4 mb-4';
-        skeletonCard.innerHTML = `
-            <div class="card h-100 shadow-sm">
-                <div class="placeholder-glow">
-                    <div class="placeholder" style="height: 200px; background-color: #e0e0e0;"></div>
-                </div>
-                <div class="card-body">
-                    <div class="placeholder-glow">
-                        <span class="placeholder col-8 mb-2" style="height: 1.5rem;"></span>
-                        <span class="placeholder col-4 mb-3" style="height: 1rem;"></span>
-                        <span class="placeholder col-12 mb-2" style="height: 0.9rem;"></span>
-                        <span class="placeholder col-10 mb-2" style="height: 0.9rem;"></span>
-                        <span class="placeholder col-9" style="height: 0.9rem;"></span>
-                    </div>
-                </div>
-                <div class="p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22;">
-                    <div class="placeholder-glow d-flex justify-content-end gap-2">
-                        <span class="placeholder" style="width: 100px; height: 32px;"></span>
-                        <span class="placeholder" style="width: 100px; height: 32px;"></span>
-                    </div>
-                </div>
-            </div>
-        `;
-        listDiv.appendChild(skeletonCard);
-    }
-}
 
 function loadReports() {
     console.log("🔄 Loading reports from Cloud...");
@@ -703,92 +662,6 @@ function upvoteReport(docId, issueType, btn) {
             window.appInsights.trackException({ exception: err });
         }
         btn.disabled = false; // Re-enable if it failed
-    });
-}
-
-// Translation function
-function translateReport(btn, targetLang) {
-    // Get the report description from the card
-    const card = btn.closest('.card');
-    const descriptionElement = card.querySelector('p');
-    const originalText = descriptionElement.textContent;
-    
-    // Disable all translation buttons temporarily
-    const translationButtons = card.querySelectorAll('[onclick^="translateReport"]');
-    translationButtons.forEach(button => button.disabled = true);
-    
-    // Show loading state
-    const originalBtnText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-    
-    // Track translation event
-    if (window.appInsights) {
-        window.appInsights.trackEvent({
-            name: "ReportTranslated",
-            properties: { 
-                targetLanguage: targetLang,
-                originalLength: originalText.length
-            }
-        });
-    }
-    
-    // Call translation Logic App
-    fetch(TRANSLATE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            text: originalText,
-            targetLanguage: targetLang
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Translation failed: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Update the description with translated text
-        if (data.translatedText) {
-            descriptionElement.innerHTML = `<strong>[${targetLang.toUpperCase()}]</strong> ${data.translatedText}`;
-            
-            // Show success message
-            const Toast = Swal.mixin({
-                toast: true, 
-                position: 'top-end', 
-                showConfirmButton: false, 
-                timer: 3000
-            });
-            Toast.fire({ 
-                icon: 'success', 
-                title: `Translated to ${targetLang.toUpperCase()}!` 
-            });
-        } else {
-            throw new Error("No translation returned");
-        }
-    })
-    .catch(error => {
-        console.error("Translation error:", error);
-        
-        // Track the error
-        if (window.appInsights) {
-            window.appInsights.trackException({ exception: error });
-        }
-        
-        // Show error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Translation Failed',
-            text: 'Could not translate the report. Please try again.',
-            confirmButtonColor: '#1abc9c'
-        });
-        
-        // Restore button text
-        btn.innerHTML = originalBtnText;
-    })
-    .finally(() => {
-        // Re-enable all translation buttons
-        translationButtons.forEach(button => button.disabled = false);
     });
 }
 

@@ -540,32 +540,12 @@ function renderReportList(reports) {
             '<div class="mt-auto">' +
                 '<div class="d-flex gap-2 mb-3">' +
                     adminControls +
-                    '<div class="flex-fill">' +
-                        '<div class="d-flex align-items-center gap-2">' +
-                            '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
-                            // Use backticks to properly escape the report ID in the onchange attribute
-                            '<select class="form-select form-select-sm" style="width: 180px;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
-                                '<option value="">Select language</option>' +
-                                '<option value="en">English 🇬🇧</option>' +
-                                '<option value="es">Spanish 🇪🇸</option>' +
-                                '<option value="fr">French 🇫🇷</option>' +
-                                '<option value="de">German 🇩🇪</option>' +
-                                '<option value="pl">Polish 🇵🇱</option>' +
-                                '<option value="ur">Urdu 🇵🇰</option>' +
-                                '<option value="pa">Punjabi 🇮🇳</option>' +
-                                '<option value="bn">Bengali 🇧🇩</option>' +
-                            '</select>' +
-                        '</div>' +
-                    '</div>' +
                 '</div>' +
             '</div>' +
             '</div>' +
             // Clean bottom bar with orange top border accent
-            '<div class="d-flex justify-content-between align-items-center gap-2 p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22; border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;">' +
-            '<div class="d-flex gap-2">' +
-                (isAdmin && report.status !== "Resolved" ? '<button class="btn btn-success btn-sm" onclick="resolveIssue(\'' + report.id + '\')" title="Mark as Resolved"><i class="fas fa-check-circle"></i></button>' : '') +
-                voteButton +
-            '</div>' +
+            '<div class="d-flex justify-content-end align-items-center gap-2 p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22; border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;">' +
+            voteButton +
             supportButton +
             '</div>' +
             '</div>';

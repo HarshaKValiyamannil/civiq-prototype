@@ -496,11 +496,11 @@ function renderReportList(reports) {
         
         // If user is Admin AND report is not yet resolved
         if (isAdmin && report.status !== "Resolved") {
-            adminControls = '<button class="btn btn-success btn-sm w-100 mt-2" onclick="resolveIssue(\'' + report.id + '\')"><i class="fas fa-check-circle"></i> Mark as Resolved</button>';
+            adminControls = '<button class="btn btn-success btn-sm flex-fill" onclick="resolveIssue(\'' + report.id + '\')" style="margin-right: 8px;"><i class="fas fa-check-circle me-1"></i> Resolve</button>';
         } 
         // If report is already resolved, show a label instead
         else if (report.status === "Resolved") {
-            adminControls = '<div class="mt-2 text-center text-success border border-success rounded p-1" style="font-size: 0.8rem; background: #d4edda;"><i class="fas fa-check"></i> Resolved</div>';
+            adminControls = '<div class="text-success border border-success rounded px-2 py-1" style="font-size: 0.75rem; background: #d4edda; flex-shrink: 0;"><i class="fas fa-check"></i></div>';
         }
 
         const cardCol = document.createElement('div');
@@ -538,12 +538,34 @@ function renderReportList(reports) {
                 '</div>' +
             '</div>' +
             '<div class="mt-auto">' +
-            adminControls +
+                '<div class="d-flex gap-2 mb-3">' +
+                    adminControls +
+                    '<div class="flex-fill">' +
+                        '<div class="d-flex align-items-center gap-2">' +
+                            '<span class="text-muted" style="font-size: 0.85rem;">Translate to:</span>' +
+                            // Use backticks to properly escape the report ID in the onchange attribute
+                            '<select class="form-select form-select-sm" style="width: 180px;" onchange="handleTranslationDropdown(this, `' + report.id + '`)">' +
+                                '<option value="">Select language</option>' +
+                                '<option value="en">English 🇬🇧</option>' +
+                                '<option value="es">Spanish 🇪🇸</option>' +
+                                '<option value="fr">French 🇫🇷</option>' +
+                                '<option value="de">German 🇩🇪</option>' +
+                                '<option value="pl">Polish 🇵🇱</option>' +
+                                '<option value="ur">Urdu 🇵🇰</option>' +
+                                '<option value="pa">Punjabi 🇮🇳</option>' +
+                                '<option value="bn">Bengali 🇧🇩</option>' +
+                            '</select>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
             '</div>' +
             '</div>' +
             // Clean bottom bar with orange top border accent
-            '<div class="d-flex justify-content-end align-items-center gap-2 p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22; border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;">' +
-            voteButton +
+            '<div class="d-flex justify-content-between align-items-center gap-2 p-3" style="background-color: #f8f9fa; border-top: 2px solid #e67e22; border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;">' +
+            '<div class="d-flex gap-2">' +
+                (isAdmin && report.status !== "Resolved" ? '<button class="btn btn-success btn-sm" onclick="resolveIssue(\'' + report.id + '\')" title="Mark as Resolved"><i class="fas fa-check-circle"></i></button>' : '') +
+                voteButton +
+            '</div>' +
             supportButton +
             '</div>' +
             '</div>';
